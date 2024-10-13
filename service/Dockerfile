@@ -1,4 +1,4 @@
-FROM rust:1.76.0-bookworm as chef
+FROM rust:1.81.0-bookworm as chef
 
 RUN cargo install cargo-chef
 WORKDIR /image-resizer
@@ -17,7 +17,9 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --bin service
 
-FROM rust:1.76.0-bookworm as runner
+FROM rust:1.81.0-bookworm as runner
+
+COPY --from=builder /image-resizer/target/release/service /usr/local/bin
 
 ENV RUST_BACKTRACE=full
 

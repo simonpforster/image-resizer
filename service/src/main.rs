@@ -4,7 +4,7 @@ use std::str::FromStr;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
-use log::{LevelFilter, SetLoggerError};
+use log::{info, LevelFilter, SetLoggerError};
 use log4rs::{Config, Handle};
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::config::{Appender, Logger, Root};
@@ -21,9 +21,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let _ = logger_setup();
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
+    info!("Attempting to start server at {addr}");
     let listener = TcpListener::bind(addr).await?;
+    info!("Server started at {addr}");
 
     loop {
         let (stream, _) = listener.accept().await?;

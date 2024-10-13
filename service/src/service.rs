@@ -17,7 +17,7 @@ pub async fn process(req: Request<hyper::body::Incoming>) -> Result<Response<Box
 
     let mut rng = rand::thread_rng();
 
-    let reader = match ImageReader::open(String::from(".") + &path) {
+    let reader = match ImageReader::open(String::from("/mnt/gcsfuse") + &path) {
         Ok(reader) => {
             info!("Found image at {path}");
             reader
