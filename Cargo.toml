@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "service"
+]
+
+[workspace.package]
+authors = ["Simon <simon.forster98@gmail.com"]
+
+[profile.release]
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
