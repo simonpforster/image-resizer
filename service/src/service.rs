@@ -6,9 +6,12 @@ use http_body_util::combinators::BoxBody;
 use hyper::{Request, Response, StatusCode};
 use hyper::body::{Frame, Bytes};
 use image::imageops::FilterType;
-use image::ImageReader;
-use log::{error, info};
+use image::{ImageFormat, ImageReader};
+use log::{error, info, warn};
 use rand::Rng;
+
+const IMAGE_HEADER_NAME: &str = "content-type";
+const IMAGE_HEADER_ROOT: &str = "image";
 
 pub async fn process(req: Request<hyper::body::Incoming>) -> Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>> {
     let path = String::from(req.uri().path());
@@ -32,6 +35,11 @@ pub async fn process(req: Request<hyper::body::Incoming>) -> Result<Response<Box
         }
     };
 
+    let format = reader.format().unwrap_or_else(|| {
+        warn!("Defaulting to Jpeg format for {path}");
+        ImageFormat::Jpeg
+    });
+
     let image = match reader.decode() {
         Ok(image) => {
             info!("Image decoded at {path}");
@@ -48,17 +56,17 @@ pub async fn process(req: Request<hyper::body::Incoming>) -> Result<Response<Box
     };
 
 
-    let new_image = image.resize(rng.gen_range(3000..image.width()), rng.gen_range(3000..image.height()), FilterType::Nearest);
+    let new_image = image.resize(rng.gen_range(20..image.width()), rng.gen_range(20..image.height()), FilterType::Nearest);
     info!("Image resized, writing image to buffer");
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
-    match new_image.write_to(&mut cursor, image::ImageFormat::Jpeg) {
+    match new_image.write_to(&mut cursor, format) {
         Ok(val) => {
             info!("Image was written for {path}");
             val
         }
         Err(_) => {
-            error!("Could write the image for {path}");
+            error!("Could not write the image for {path}");
             return Ok(
                 Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
@@ -73,7 +81,15 @@ pub async fn process(req: Request<hyper::body::Incoming>) -> Result<Response<Box
     });
     let body: BoxBody<Bytes, hyper::Error> = BoxBody::new(StreamBody::new(chunked));
     info!("Respond Success!");
-    let response = Response::builder().status(StatusCode::OK).body(body).unwrap();
+
+    let image_extension = format.extensions_str().to_owned().iter().next().map(|ext| "/".to_owned() + ext).unwrap_or_else(|| "".to_owned());
+
+    let response =
+        Response::builder()
+            .status(StatusCode::OK)
+            .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*image_extension)
+            .body(body)
+            .unwrap();
     Ok(response)
 }
 

@@ -8,3 +8,9 @@ services:
       dockerfile: service/Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - /Users/sfe34/oliviazuo-portfolio:/mnt/gcsfuse
+
+
+volumes:
+  bucket:
