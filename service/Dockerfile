@@ -19,10 +19,15 @@ RUN cargo build --release --bin service
 
 FROM rust:1.81.0-bookworm as runner
 
-COPY --from=builder /image-resizer/target/release/service /usr/local/bin
+COPY --from=builder --chown=65534 /image-resizer/target/release/service /usr/local/bin
+
+RUN mkdir /mnt/gcsfuse
+RUN chown 65534 /mnt/gcsfuse
 
 ENV RUST_BACKTRACE=full
 
 EXPOSE 8080
+
+USER 65534
 
 CMD ["/usr/local/bin/service"]
