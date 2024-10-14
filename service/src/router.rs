@@ -3,12 +3,13 @@ use std::error;
 use http_body_util::{BodyExt, combinators::BoxBody, Full};
 use hyper::{Method, Request, Response, StatusCode};
 use hyper::body::Bytes;
-
+use log::info;
 use crate::service::process;
 
 pub async fn router(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>,  Box<dyn error::Error + Send + Sync>> {
+    info!("Incoming {} request at {}", req.method().as_str(), req.uri());
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/private/status") => {
             let mut ok = Response::new(full("OK"));
