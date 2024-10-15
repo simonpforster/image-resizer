@@ -42,3 +42,4 @@ jobs:
           file: ./service/Dockerfile
           push: true
           tags: ${{ env.IMAGE_TAG }}
+          provenance: false
