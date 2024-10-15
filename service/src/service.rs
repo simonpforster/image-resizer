@@ -10,7 +10,8 @@ use image::imageops::FilterType;
 use image::{DynamicImage, ImageFormat, ImageReader};
 use log::{error, info, warn};
 use rand::{Rng};
-use crate::service::ErrorResponse::{ImageNotFoundError, ImageDecodeError, ImageWriteError};
+use crate::error::ErrorResponse;
+use crate::error::ErrorResponse::*;
 
 const PATH: &str = "/mnt/gcsfuse";
 
@@ -19,53 +20,6 @@ const IMAGE_HEADER_ROOT: &str = "image";
 
 pub type ResultResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>>;
 pub type InternalResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, ErrorResponse>;
-
-#[derive(Debug)]
-pub enum ErrorResponse
-where
-    ErrorResponse: error::Error,
-{
-    ImageNotFoundError { path: String },
-    ImageDecodeError { path: String },
-    ImageWriteError { path: String },
-}
-
-impl Display for ErrorResponse {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ImageNotFoundError { path } => write!(f, "Image not found for: {path}"),
-            ImageDecodeError { path } => write!(f, "Image could not be decoded for: {path}"),
-            ImageWriteError { path } => write!(f, "Image could not be written for: {path}"),
-        }
-    }
-}
-
-impl ErrorResponse {
-    fn handle(&self) -> hyper::http::Result<Response<BoxBody<Bytes, hyper::Error>>> {
-        match self {
-            ImageNotFoundError { path } => {
-                error_response(
-                    StatusCode::NOT_FOUND,
-                    format!("Image not found for: {path}"),
-                )
-            }
-            ImageDecodeError { path } => {
-                error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Image could not be decoded for: {path}"),
-                )
-            }
-            ImageWriteError { path } => {
-                error_response(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Image could not be written for: {path}"),
-                )
-            }
-        }
-    }
-}
-
-impl error::Error for ErrorResponse {}
 
 pub fn process(path: &str) -> InternalResponse {
     info!("Open image for path: {path}");
@@ -118,7 +72,7 @@ pub fn process(path: &str) -> InternalResponse {
     Ok(response)
 }
 
-fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
+pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
     Full::new(chunk.into())
         .map_err(|never| match never {})
         .boxed()
@@ -127,12 +81,6 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
 pub fn transform(response: InternalResponse) -> ResultResponse {
     match response {
         Ok(resp) => Ok(resp),
-        Err(e) => Ok(e.handle()?)
+        Err(e) => Ok(e.handle()?),
     }
-}
-
-pub fn error_response(status_code: StatusCode, message: String) -> hyper::http::Result<Response<BoxBody<Bytes, hyper::Error>>> {
-    Response::builder()
-        .status(status_code)
-        .body(full(message))
 }
