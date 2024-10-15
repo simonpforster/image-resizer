@@ -15,6 +15,7 @@ use crate::router::router;
 
 mod service;
 mod router;
+mod error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
