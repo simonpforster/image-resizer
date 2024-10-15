@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set vars
-        run: echo "IMAGE_TAG=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE" >> $GITHUB_ENV
+        run: echo "IMAGE_TAG=$REGION-docker.pkg.dev/$PROJECT/$REPO_DEV/$IMAGE" >> $GITHUB_ENV
 
       - name: Google Cloud Auth
         uses: google-github-actions/auth@v1
