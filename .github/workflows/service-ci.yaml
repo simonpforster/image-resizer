@@ -1,0 +1,24 @@
+name: Service CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  Rust-build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Check
+        run: cargo check --workspace
+
+      - name: Run tests
+        run: cargo test --package service
