@@ -1,6 +1,5 @@
 use std::io::Cursor;
 use std::error;
-use std::fmt::{Debug, Display, Formatter};
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
