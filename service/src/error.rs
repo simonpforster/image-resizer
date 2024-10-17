@@ -1,9 +1,9 @@
-use std::error;
-use std::fmt::{Display, Formatter};
+use crate::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError, ImageWriteError};
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use hyper::{Response, StatusCode};
-use crate::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError, ImageWriteError};
+use std::error;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum ErrorResponse
