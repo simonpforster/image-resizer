@@ -1,8 +1,8 @@
 use std::cmp::min;
 use std::collections::HashMap;
-use std::io::Cursor;
+use std::io::{BufReader, BufWriter, Cursor, Read};
 use std::error;
-use std::fs::exists;
+use std::fs::{exists, File};
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
@@ -16,8 +16,7 @@ use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
 use crate::error::ErrorResponse::*;
 
-const PATH: &str = "./";
-// const PATH: &str = "/mnt/gcsfuse";
+const PATH: &str = "/mnt/gcsfuse";
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const IMAGE_HEADER_ROOT: &str = "image";
@@ -27,18 +26,26 @@ pub type InternalResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Error
 
 pub fn process(path: &str) -> InternalResponse {
 
-    let (image, format) = read_image(path)?;
+    let format: ImageFormat = ImageFormat::Jpeg;
 
-    let mut bytes: Vec<u8> = Vec::new();
-    let mut cursor = Cursor::new(&mut bytes);
-    image.write_to(&mut cursor, format).map_err(|_| {
-        error!("Could not write the image for {path}");
-        ImageWriteError { path: path.to_string() }
+    // let res = reqwest::get("").await.map_err(|_| ImageNotFoundError { path: path.to_string() })?;
+    //
+    // let bytes = res.bytes().await.unwrap();
+
+    info!("Open image for path: {path}");
+    let reader = ImageReader::open(String::from(PATH) + &path).map_err(|_| {
+        error!("Could not find image at {path}");
+        ImageNotFoundError { path: path.to_string() }
     })?;
-    info!("Image was written for {path}");
+    info!("Found image at {path}");
+
+    let mut reader = BufReader::new(File::open(String::from(PATH) + &path).unwrap());
+    let mut buf: Vec<u8> = Vec::new();
+    reader.read_to_end(&mut buf).expect("TODO: panic message");
+
 
     let format_extension: String = get_format_extension(format);
-    let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
+    let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(buf);
 
     let response =
         Response::builder()
