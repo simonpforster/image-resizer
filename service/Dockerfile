@@ -1,4 +1,4 @@
-FROM rust:1.81.0-bookworm as chef
+FROM rust:1.81.0-bookworm AS chef
 
 RUN cargo install cargo-chef
 WORKDIR /image-resizer
@@ -9,7 +9,7 @@ FROM chef AS planner
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
-FROM chef as builder
+FROM chef AS builder
 COPY --from=planner /image-resizer/recipe.json recipe.json
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --recipe-path recipe.json
@@ -17,7 +17,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --bin service
 
-FROM rust:1.81.0-bookworm as runner
+FROM rust:1.81.0-bookworm AS runner
 
 COPY --from=builder --chown=65534 /image-resizer/target/release/service /usr/local/bin
 

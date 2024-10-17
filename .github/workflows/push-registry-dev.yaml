@@ -2,14 +2,14 @@ name: Push Registry
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - 'main'
 
 env:
   REGION: europe-west2
   PROJECT: listen-and-learn-411214
   REPO: image-resizer
-  IMAGE: image-resizer
+  IMAGE: image-resizer-dev
 
 jobs:
   build-push:
@@ -21,7 +21,7 @@ jobs:
       - name: Set vars
         run: |
          echo "IMAGE_TAG_LATEST=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:latest" >> $GITHUB_ENV
-         echo "IMAGE_TAG_VERSION=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:$GITHUB_REF_NAME" >> $GITHUB_ENV
+         echo "IMAGE_TAG_VERSION=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:$GITHUB_SHA" >> $GITHUB_ENV
 
       - name: Google Cloud Auth
         uses: google-github-actions/auth@v1
