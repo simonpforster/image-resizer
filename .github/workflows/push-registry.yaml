@@ -7,8 +7,8 @@ on:
 env:
   REGION: europe-west2
   PROJECT: listen-and-learn-411214
-  REPO_DEV: image-resizer-dev
-  IMAGE: image-resizer:latest
+  REPO_DEV: image-resizer
+  IMAGE: image-resizer-dev:latest
 
 jobs:
   build-push:
