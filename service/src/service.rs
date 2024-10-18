@@ -58,18 +58,15 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let new_image: DynamicImage = match dimension {
         Width(new_width) => {
             if new_width < image.width() {
-                let new_height = (new_width * image.height()) / image.width() ;
-                info!("Resizing WRT to width to {new_width}x{new_height}");
-                image.resize(new_width, new_height, FilterType::Nearest)
+                image.resize(new_width, image.height(), FilterType::Nearest)
             } else {
                 image
             }
         }
         Height(new_height) => {
             if new_height < image.height() {
-                let new_width = (new_height * image.width()) / image.height();
-                info!("Resizing WRT to height to {new_width}x{new_height}");
-                image.resize(new_width, new_height, FilterType::Nearest)
+
+                image.resize(image.width(), new_height, FilterType::Nearest)
             } else {
                 image
             }
