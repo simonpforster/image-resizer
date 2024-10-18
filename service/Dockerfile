@@ -17,7 +17,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 
 ENV RUSTFLAGS="-C target-cpu=haswell -C opt-level=3 -C target-feature=+avx,+avx2,+sse2"
-RUN cargo build --release --target=x86_64-unknown-linux-gnu --bin service
+RUN cargo build --release --bin service
 
 FROM rust:1.81.0-bookworm AS runner
 
