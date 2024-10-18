@@ -3,7 +3,6 @@ use std::error;
 use http_body_util::{BodyExt, combinators::BoxBody, Full};
 use hyper::{Method, Request, Response, StatusCode};
 use hyper::body::Bytes;
-use log::{debug, info};
 use crate::service::{process, process_resize, transform};
 
 pub async fn router(

@@ -15,14 +15,13 @@ COPY --from=planner /image-resizer/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY . .
-RUN cargo build --release --bin service
+
+ENV RUSTFLAGS="-C target-cpu=haswell -C opt-level=3 -C target-feature=+avx,+avx2,+sse2"
+RUN cargo build --bin service
 
 FROM rust:1.81.0-bookworm AS runner
 
 COPY --from=builder --chown=65534 /image-resizer/target/release/service /usr/local/bin
-
-RUN mkdir /mnt/gcsfuse
-RUN chown 65534 /mnt/gcsfuse
 
 ENV RUST_BACKTRACE=full
 

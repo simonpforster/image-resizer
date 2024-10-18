@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use std::process::Command;
 use std::str::FromStr;
 
 use hyper::server::conn::http1;
@@ -17,10 +18,10 @@ mod service;
 mod router;
 mod error;
 mod dimension;
+mod server_timing;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-
     let _ = logger_setup();
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
