@@ -43,9 +43,7 @@ mod tests {
         };
         let expected_string = format!("{timing1}, {timing2}");
 
-        let server_timing = ServerTiming {
-            timings: [timing1, timing2].to_vec(),
-        };
+        let server_timing = ServerTiming::new([timing1, timing2].to_vec());
         let formatted_string = format!("{server_timing}");
 
         assert_eq!(expected_string, formatted_string)
