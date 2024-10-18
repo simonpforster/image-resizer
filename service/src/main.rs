@@ -24,16 +24,6 @@ mod server_timing;
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = logger_setup();
 
-    let uname = Command::new("uname")
-        .arg("-p")
-        .output().map(|d| String::from_utf8(d.stdout).unwrap_or(String::from(""))).unwrap_or(String::from(""));
-
-    let cpuinfo = Command::new("cat")
-        .arg("/proc/cpuinfo")
-        .output().map(|d| String::from_utf8(d.stdout).unwrap_or(String::from(""))).unwrap_or(String::from(""));
-
-    info!("CPU architecture: {} or {}" , uname, cpuinfo);
-
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
     info!("Attempting to start server at {addr}");
