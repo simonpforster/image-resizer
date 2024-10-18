@@ -76,14 +76,14 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let new_image: DynamicImage = match dimension {
         Width(new_width) => {
             if new_width < image.width() {
-                image.resize(new_width, image.height(), FilterType::Nearest)
+                image.resize(new_width, image.height(), FilterType::Lanczos3)
             } else {
                 image
             }
         }
         Height(new_height) => {
             if new_height < image.height() {
-                image.resize(image.width(), new_height, FilterType::Nearest)
+                image.resize(image.width(), new_height, FilterType::Lanczos3)
             } else {
                 image
             }
