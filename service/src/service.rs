@@ -76,14 +76,14 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let new_image: DynamicImage = match dimension {
         Width(new_width) => {
             if new_width < image.width() {
-                image.resize(new_width, image.height(), FilterType::Nearest)
+                image.resize(new_width, image.height(), FilterType::Triangle)
             } else {
                 image
             }
         }
         Height(new_height) => {
             if new_height < image.height() {
-                image.resize(image.width(), new_height, FilterType::Nearest)
+                image.resize(image.width(), new_height, FilterType::Triangle)
             } else {
                 image
             }
@@ -105,7 +105,6 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let format_extension: String = get_format_extension(format);
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
     let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
-
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
