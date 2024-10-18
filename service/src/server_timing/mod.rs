@@ -27,20 +27,13 @@ impl ServerTiming {
 }
 
 mod tests {
+    use std::time::Duration;
     use super::*;
 
     #[test]
     fn server_timing_display() {
-        let timing1 = Timing {
-            name: String::from("db"),
-            duration: String::from("56.6"),
-            description: None,
-        };
-        let timing2 = Timing {
-            name: String::from("req"),
-            duration: String::from("32.3"),
-            description: None,
-        };
+        let timing1 = Timing::new("db", Duration::from_millis(56), None);
+        let timing2 = Timing::new("ser", Duration::from_millis(32), None);
         let expected_string = format!("{timing1}, {timing2}");
 
         let server_timing = ServerTiming::new([timing1, timing2].to_vec());

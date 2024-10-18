@@ -3,9 +3,9 @@ use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct Timing {
-    pub name: String,
-    pub duration: String,
-    pub description: Option<String>,
+    name: String,
+    duration: String,
+    description: Option<String>,
 }
 
 impl Display for Timing {
