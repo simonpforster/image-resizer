@@ -33,7 +33,10 @@ pub fn process(path: &str) -> InternalResponse {
     let format: ImageFormat = ImageFormat::from_path(path).unwrap();
     info!("Image format found.");
 
-    let mut reader = BufReader::new(File::open(String::from(PATH) + &path).unwrap());
+    let mut reader = BufReader::new(File::open(String::from(PATH) + &path).map_err(|_| {
+        error!("Could not find image at {path}");
+        ImageNotFoundError { path: path.to_string() }
+    })?);
     let mut buf: Vec<u8> = Vec::new();
     reader.read_to_end(&mut buf).expect("TODO: panic message");
     info!("Found image at {path}");
