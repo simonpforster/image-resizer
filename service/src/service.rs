@@ -1,6 +1,7 @@
 use std::io::{BufReader, Cursor, Read};
 use std::error;
 use std::fs::File;
+use std::time::Instant;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
@@ -13,17 +14,23 @@ use crate::dimension::{decode, Dimension};
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
 use crate::error::ErrorResponse::*;
+use crate::server_timing::ServerTiming;
+use crate::server_timing::timing::Timing;
 
-const PATH: &str = "/mnt/gcsfuse";
+// const PATH: &str = "/mnt/gcsfuse";
+const PATH: &str = "./oliviazuo-portfolio";
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const IMAGE_HEADER_ROOT: &str = "image";
+
+const SERVER_TIMING_HEADER_NAME: &str = "Server-Timing";
 
 pub type ResultResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>>;
 pub type InternalResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, ErrorResponse>;
 
 pub fn process(path: &str) -> InternalResponse {
 
+    let decoding_timer = Instant::now();
     let format: ImageFormat = ImageFormat::from_path(path).unwrap();
     info!("Image format found.");
 
@@ -31,14 +38,21 @@ pub fn process(path: &str) -> InternalResponse {
     let mut buf: Vec<u8> = Vec::new();
     reader.read_to_end(&mut buf).expect("TODO: panic message");
     info!("Found image at {path}");
+    let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
+
+    let encoding_timer = Instant::now();
     let format_extension: String = get_format_extension(format);
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(buf);
+    let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
 
+
+    let server_timing: ServerTiming = ServerTiming::new([decoding_timing, encoding_timing].to_vec());
     let response =
         Response::builder()
             .status(StatusCode::OK)
             .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
+            .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
             .body(body)
             .unwrap();
     Ok(response)
@@ -47,12 +61,16 @@ pub fn process(path: &str) -> InternalResponse {
 
 pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
+    let decoding_timer = Instant::now();
     info!("Processing query parameters");
     let dimension: Dimension = decode(query)?;
     info!("Dimensions parsed");
 
     let (image, format) = read_image(path)?;
+    let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
+
+    let resizing_timer = Instant::now();
     let new_image: DynamicImage = match dimension {
         Width(new_width) => {
             if new_width < image.width() {
@@ -69,9 +87,11 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
             }
         }
     };
+    let resizing_timing: Timing = Timing::new("res", resizing_timer.elapsed(), None);
 
     info!("Image resized, writing image to buffer");
 
+    let encoding_timer = Instant::now();
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
     new_image.write_to(&mut cursor, format).map_err(|_| {
@@ -82,11 +102,16 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
     let format_extension: String = get_format_extension(format);
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
+    let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
+
+
+    let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
     let response =
         Response::builder()
             .status(StatusCode::OK)
             .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
+            .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
             .body(body)
             .unwrap();
     Ok(response)
