@@ -1,8 +1,6 @@
-use std::cmp::min;
-use std::collections::HashMap;
-use std::io::{BufReader, BufWriter, Cursor, Read};
+use std::io::{BufReader, Cursor, Read};
 use std::error;
-use std::fs::{exists, File};
+use std::fs::File;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
@@ -65,7 +63,6 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
         }
         Height(new_height) => {
             if new_height < image.height() {
-
                 image.resize(image.width(), new_height, FilterType::Nearest)
             } else {
                 image

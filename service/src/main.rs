@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use std::process::Command;
 use std::str::FromStr;
 
 use hyper::server::conn::http1;
@@ -20,8 +21,17 @@ mod dimension;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-
     let _ = logger_setup();
+
+    let uname = Command::new("uname")
+        .arg("-p")
+        .output()?.stdout;
+
+    let cpuinfo = Command::new("cat")
+        .arg("/proc/cpuinfo")
+        .output()?.stdout;
+
+    info!("CPU architecture: {} or {}" , String::from_utf8(uname)?, String::from_utf8(cpuinfo)?);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
