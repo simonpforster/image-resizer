@@ -23,9 +23,6 @@ FROM rust:1.81.0-bookworm AS runner
 
 COPY --from=builder --chown=65534 /image-resizer/target/release/service /usr/local/bin
 
-RUN mkdir /mnt
-RUN chown 65534 /mnt
-
 ENV RUST_BACKTRACE=full
 
 EXPOSE 8080
