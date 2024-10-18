@@ -17,8 +17,7 @@ use crate::error::ErrorResponse::*;
 use crate::server_timing::ServerTiming;
 use crate::server_timing::timing::Timing;
 
-// const PATH: &str = "/mnt/gcsfuse";
-const PATH: &str = "./oliviazuo-portfolio";
+const PATH: &str = "/mnt";
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const IMAGE_HEADER_ROOT: &str = "image";
