@@ -1,6 +1,5 @@
 use std::fmt::{Display, Formatter};
-use std::time::{Duration, Instant};
-use log4rs::config::InitError::Deserializing;
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct Timing {
@@ -24,8 +23,6 @@ impl Timing {
         Timing { name: name.to_string(), duration: dur.to_string(), description: descrition }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

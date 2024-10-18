@@ -26,13 +26,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let uname = Command::new("uname")
         .arg("-p")
-        .output()?.stdout;
+        .output().map(|d| String::from_utf8(d.stdout).unwrap_or(String::from(""))).unwrap_or(String::from(""));
 
     let cpuinfo = Command::new("cat")
         .arg("/proc/cpuinfo")
-        .output()?.stdout;
+        .output().map(|d| String::from_utf8(d.stdout).unwrap_or(String::from(""))).unwrap_or(String::from(""));
 
-    info!("CPU architecture: {} or {}" , String::from_utf8(uname)?, String::from_utf8(cpuinfo)?);
+    info!("CPU architecture: {} or {}" , uname, cpuinfo);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
