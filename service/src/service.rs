@@ -92,7 +92,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color()
                 );
-                let _ = resizer.resize(&image, &mut new_image, opts);
+                let _ = resizer.resize(&image, &mut new_image, &opts);
             } else {
                 new_image = image;
             }
@@ -105,7 +105,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color()
                 );
-                let _ = resizer.resize(&image, &mut new_image, opts);
+                let _ = resizer.resize(&image, &mut new_image, &opts);
             } else {
                 new_image = image;
             }
