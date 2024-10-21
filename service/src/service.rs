@@ -10,7 +10,7 @@ use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
 use image::{DynamicImage, ImageFormat, ImageReader};
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use crate::dimension::{decode, Dimension};
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
@@ -57,6 +57,7 @@ pub fn process(path: &str) -> InternalResponse {
             .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
             .body(body)
             .unwrap();
+    info!("Successful response");
     Ok(response)
 }
 

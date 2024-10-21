@@ -51,7 +51,7 @@ fn logger_setup() -> Result<Handle, SetLoggerError> {
 
     let stdout: ConsoleAppender = ConsoleAppender::builder()
         .target(Target::Stdout)
-        .encoder(Box::new(PatternEncoder::new("{d} {l} - {m}{n}")))
+        .encoder(Box::new(PatternEncoder::new("{m}{n}")))
         .build();
 
     let log_conf: log4rs::Config = Config::builder()
