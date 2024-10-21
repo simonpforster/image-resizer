@@ -22,7 +22,7 @@ const PATH: &str = "/mnt";
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const CACHE_CONTROL_HEADER_NAME: &str = "cache-control";
-const CACHE_CONTROL_HEADER_VALUE: u32 = 31536000;
+const CACHE_CONTROL_HEADER_VALUE: &str = "max-age=31536000";
 const IMAGE_HEADER_ROOT: &str = "image";
 const SERVER_TIMING_HEADER_NAME: &str = "Server-Timing";
 
