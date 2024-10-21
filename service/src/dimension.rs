@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use log::info;
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
 use crate::error::ErrorResponse::ImageWriteError;
