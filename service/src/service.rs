@@ -29,6 +29,8 @@ pub type ResultResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn
 pub type InternalResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, ErrorResponse>;
 
 pub fn process(path: &str) -> InternalResponse {
+    let process_timer: Instant = Instant::now();
+
     let decoding_timer = Instant::now();
     let format: ImageFormat = ImageFormat::from_path(path).unwrap();
     debug!("Image format found.");
@@ -57,12 +59,14 @@ pub fn process(path: &str) -> InternalResponse {
             .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
             .body(body)
             .unwrap();
-    info!("Successful response");
+    info!("Success simple {}: {path}", process_timer.elapsed().as_millis());
     Ok(response)
 }
 
 
 pub fn process_resize(path: &str, query: &str) -> InternalResponse {
+    let process_timer: Instant = Instant::now();
+
     let decoding_timer = Instant::now();
     debug!("Processing query parameters");
     let dimension: Dimension = decode(query)?;
@@ -135,6 +139,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
             .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
             .body(body)
             .unwrap();
+    info!("Success resize {}: {path}?{query}", process_timer.elapsed().as_millis());
     Ok(response)
 }
 
