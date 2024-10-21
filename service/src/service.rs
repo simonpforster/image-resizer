@@ -27,7 +27,7 @@ const IMAGE_HEADER_ROOT: &str = "image";
 const SERVER_TIMING_HEADER_NAME: &str = "Server-Timing";
 
 pub type ResultResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>>;
-pub type InternalResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, ErrorResponse>;
+pub type InternalResponse = Result<(BoxBody<Bytes, hyper::Error>, ServerTiming, String), ErrorResponse>;
 
 pub fn process(path: &str) -> InternalResponse {
     let process_timer: Instant = Instant::now();
@@ -53,16 +53,8 @@ pub fn process(path: &str) -> InternalResponse {
 
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, encoding_timing].to_vec());
-    let response =
-        Response::builder()
-            .status(StatusCode::OK)
-            .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
-            .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
-            .header(CACHE_CONTROL_HEADER_NAME, CACHE_CONTROL_HEADER_VALUE)
-            .body(body)
-            .unwrap();
     info!("Success simple {}: {path}", process_timer.elapsed().as_millis());
-    Ok(response)
+    Ok((body, server_timing, format_extension))
 }
 
 
@@ -78,7 +70,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
     let opts = ResizeOptions {
-        algorithm:  ResizeAlg::Convolution(FilterType::Lanczos3),
+        algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
         cropping: SrcCropping::None,
         mul_div_alpha: true,
     };
@@ -94,7 +86,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 new_image = DynamicImage::new(
                     new_width,
                     new_height,
-                    image.color()
+                    image.color(),
                 );
                 let _ = resizer.resize(&image, &mut new_image, &opts);
             } else {
@@ -107,7 +99,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 new_image = DynamicImage::new(
                     new_width,
                     new_height,
-                    image.color()
+                    image.color(),
                 );
                 let _ = resizer.resize(&image, &mut new_image, &opts);
             } else {
@@ -134,16 +126,8 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
-    let response =
-        Response::builder()
-            .status(StatusCode::OK)
-            .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
-            .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
-            .header(CACHE_CONTROL_HEADER_NAME, CACHE_CONTROL_HEADER_VALUE)
-            .body(body)
-            .unwrap();
     info!("Success resize {}: {path}?{query}", process_timer.elapsed().as_millis());
-    Ok(response)
+    Ok((body, server_timing, format_extension))
 }
 
 fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
@@ -188,7 +172,14 @@ pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
 
 pub fn transform(response: InternalResponse) -> ResultResponse {
     match response {
-        Ok(resp) => Ok(resp),
+        Ok((body, server_timing, format_extension)) => {
+            Ok(Response::builder()
+                .status(StatusCode::OK)
+                .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
+                .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
+                .header(CACHE_CONTROL_HEADER_NAME, CACHE_CONTROL_HEADER_VALUE)
+                .body(body)?)
+        }
         Err(e) => Ok(e.handle()?),
     }
 }
