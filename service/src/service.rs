@@ -3,13 +3,13 @@ use std::error;
 use std::fs::File;
 use std::time::Instant;
 use fast_image_resize::images::Image;
-use fast_image_resize::{IntoImageView, Resizer};
+use fast_image_resize::{IntoImageView, ResizeAlg, Resizer};
+use fast_image_resize::FilterType;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
-use image::imageops::FilterType;
 use image::{DynamicImage, ImageFormat, ImageReader};
 use log::{error, info, warn};
 use crate::dimension::{decode, Dimension};
@@ -76,7 +76,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
 
     let mut new_image: DynamicImage;
-    let mut resizer = Resizer::new();
+    let mut resizer: Resizer = Resizer::new();
 
     let resizing_timer = Instant::now();
     match dimension {
@@ -88,7 +88,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color()
                 );
-                resizer.resize(&image, &mut new_image, None);
+                let _ = resizer.resize(&image, &mut new_image, ResizeAlg::Convolution(FilterType::Lanczos3));
             } else {
                 new_image = image;
             }
@@ -101,7 +101,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color()
                 );
-                resizer.resize(&image, &mut new_image, None);
+                let _ = resizer.resize(&image, &mut new_image, ResizeAlg::Convolution(FilterType::Lanczos3));
             } else {
                 new_image = image;
             }
