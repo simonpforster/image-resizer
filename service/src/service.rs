@@ -10,7 +10,7 @@ use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
 use image::{DynamicImage, ImageFormat, ImageReader};
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 use crate::dimension::{decode, Dimension};
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
@@ -34,7 +34,7 @@ pub fn process(path: &str) -> InternalResponse {
     debug!("Image format found.");
 
     let mut reader = BufReader::new(File::open(String::from(PATH) + &path).map_err(|_| {
-        debug!("Could not find image at {path}");
+        error!("Could not find image at {path}");
         ImageNotFoundError { path: path.to_string() }
     })?);
     let mut buf: Vec<u8> = Vec::new();
