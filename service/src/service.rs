@@ -3,7 +3,7 @@ use std::error;
 use std::fs::File;
 use std::time::Instant;
 use fast_image_resize::images::Image;
-use fast_image_resize::{IntoImageView, ResizeAlg, Resizer};
+use fast_image_resize::{IntoImageView, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use fast_image_resize::FilterType;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
@@ -73,7 +73,11 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let (image, format) = read_image(path)?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
-
+    let opts = ResizeOptions {
+        algorithm:  ResizeAlg::Convolution(FilterType::Lanczos3),
+        cropping: SrcCropping::None,
+        mul_div_alpha: true,
+    };
 
     let mut new_image: DynamicImage;
     let mut resizer: Resizer = Resizer::new();
@@ -88,7 +92,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color()
                 );
-                let _ = resizer.resize(&image, &mut new_image, ResizeAlg::Convolution(FilterType::Lanczos3));
+                let _ = resizer.resize(&image, &mut new_image, opts);
             } else {
                 new_image = image;
             }
@@ -101,7 +105,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color()
                 );
-                let _ = resizer.resize(&image, &mut new_image, ResizeAlg::Convolution(FilterType::Lanczos3));
+                let _ = resizer.resize(&image, &mut new_image, opts);
             } else {
                 new_image = image;
             }
