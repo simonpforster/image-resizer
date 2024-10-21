@@ -2,6 +2,8 @@ use std::io::{BufReader, Cursor, Read};
 use std::error;
 use std::fs::File;
 use std::time::Instant;
+use fast_image_resize::images::Image;
+use fast_image_resize::{IntoImageView, Resizer};
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
@@ -72,20 +74,36 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
 
+
+    let mut new_image: DynamicImage;
+    let mut resizer = Resizer::new();
+
     let resizing_timer = Instant::now();
-    let new_image: DynamicImage = match dimension {
+    match dimension {
         Width(new_width) => {
             if new_width < image.width() {
-                image.resize(new_width, image.height(), FilterType::Triangle)
+                let new_height = (new_width * image.height()) / image.width();
+                new_image = DynamicImage::new(
+                    new_width,
+                    new_height,
+                    image.color()
+                );
+                resizer.resize(&image, &mut new_image, None);
             } else {
-                image
+                new_image = image;
             }
         }
         Height(new_height) => {
             if new_height < image.height() {
-                image.resize(image.width(), new_height, FilterType::Triangle)
+                let new_width = (new_height * image.width()) / image.height();
+                new_image = DynamicImage::new(
+                    new_width,
+                    new_height,
+                    image.color()
+                );
+                resizer.resize(&image, &mut new_image, None);
             } else {
-                image
+                new_image = image;
             }
         }
     };
