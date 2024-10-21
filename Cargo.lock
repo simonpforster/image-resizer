@@ -1318,7 +1318,7 @@ dependencies = [
 
 [[package]]
 name = "service"
-version = "0.0.3"
+version = "0.0.5"
 dependencies = [
  "fast_image_resize",
  "futures",
