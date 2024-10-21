@@ -21,8 +21,9 @@ use crate::server_timing::timing::Timing;
 const PATH: &str = "/mnt";
 
 const IMAGE_HEADER_NAME: &str = "content-type";
+const CACHE_CONTROL_HEADER_NAME: &str = "cache-control";
+const CACHE_CONTROL_HEADER_VALUE: u32 = 31536000;
 const IMAGE_HEADER_ROOT: &str = "image";
-
 const SERVER_TIMING_HEADER_NAME: &str = "Server-Timing";
 
 pub type ResultResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>>;
@@ -57,6 +58,7 @@ pub fn process(path: &str) -> InternalResponse {
             .status(StatusCode::OK)
             .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
             .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
+            .header(CACHE_CONTROL_HEADER_NAME, CACHE_CONTROL_HEADER_VALUE)
             .body(body)
             .unwrap();
     info!("Success simple {}: {path}", process_timer.elapsed().as_millis());
@@ -137,6 +139,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
             .status(StatusCode::OK)
             .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
             .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
+            .header(CACHE_CONTROL_HEADER_NAME, CACHE_CONTROL_HEADER_VALUE)
             .body(body)
             .unwrap();
     info!("Success resize {}: {path}?{query}", process_timer.elapsed().as_millis());
