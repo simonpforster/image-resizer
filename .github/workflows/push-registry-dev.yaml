@@ -24,12 +24,12 @@ jobs:
          echo "IMAGE_TAG_VERSION=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:$GITHUB_SHA" >> $GITHUB_ENV
 
       - name: Google Cloud Auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: "${{ secrets.GC_IMAGE_MANAGER_KEY }}"
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Docker auth
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
