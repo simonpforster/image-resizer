@@ -23,7 +23,6 @@ pub fn decode(query: &str) -> Result<Dimension, ErrorResponse> {
                     _ => None,
                 }
             }).flatten().collect::<HashMap::<&str, &str>>();
-    info!("Parsed query params into hashmap, finding relevant ones");
 
     let opt_width = params.get("width");
     let opt_height = params.get("height");
