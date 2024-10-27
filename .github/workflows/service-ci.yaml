@@ -10,11 +10,10 @@ on:
 
 
 env:
-  CARGO_TERM_COLOR: always
-  REGION: europe-west2
+  REGION: europe-west1
   PROJECT: listen-and-learn-411214
-  REPO: image-resizer
-  IMAGE: image-resizer-dev
+  REPO: dev
+  IMAGE: image-resizer
 
 jobs:
   rust-build:
