@@ -142,12 +142,12 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     debug!("Image was written for {path}");
 
     let format_extension: String = get_format_extension(format);
+    let content_length: u64 = bytes.len() as u64;
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
     let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
-    let content_length: u64 = bytes.len() as u64;
     info!("Success resize {}: {path}?{query}", process_timer.elapsed().as_millis());
     Ok(ImageData {
         body,
