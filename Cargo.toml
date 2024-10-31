@@ -5,7 +5,7 @@ members = [
 ]
 
 [workspace.package]
-authors = ["Simon <simon.forster98@gmail.com"]
+authors = ["Simon <simon.forster98@gmail.com>"]
 
 [profile.release]
 strip = true
