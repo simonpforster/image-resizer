@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-use hyper::server::conn::http1;
+use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use log::{info, LevelFilter, SetLoggerError};
@@ -19,6 +19,19 @@ mod error;
 mod dimension;
 mod server_timing;
 
+#[derive(Clone)]
+pub struct TokioExecutor;
+
+impl<F> hyper::rt::Executor<F> for TokioExecutor
+where
+    F: std::future::Future + Send + 'static,
+    F::Output: Send + 'static,
+{
+    fn execute(&self, fut: F) {
+        tokio::task::spawn(fut);
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = logger_setup();
@@ -35,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let io = TokioIo::new(stream);
 
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
+            if let Err(err) = http2::Builder::new(TokioExecutor)
                 // `service_fn` converts our function in a `Service`
                 .serve_connection(io, service_fn(router))
                 .await
