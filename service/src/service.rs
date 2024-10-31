@@ -1,6 +1,7 @@
 use std::io::{BufReader, Cursor, Read};
 use std::error;
 use std::fs::File;
+use std::os::unix::fs::MetadataExt;
 use std::time::Instant;
 use fast_image_resize::{ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use fast_image_resize::FilterType;
@@ -27,7 +28,15 @@ const IMAGE_HEADER_ROOT: &str = "image";
 const SERVER_TIMING_HEADER_NAME: &str = "Server-Timing";
 
 pub type ResultResponse = Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>>;
-pub type InternalResponse = Result<(BoxBody<Bytes, hyper::Error>, ServerTiming, String), ErrorResponse>;
+pub type InternalResponse = Result<ImageData, ErrorResponse>;
+
+pub struct ImageData {
+    body: BoxBody<Bytes, hyper::Error>,
+    server_timing: ServerTiming,
+    format_extension: String,
+    content_length: u64,
+}
+
 
 pub fn process(path: &str) -> InternalResponse {
     let process_timer: Instant = Instant::now();
@@ -36,10 +45,17 @@ pub fn process(path: &str) -> InternalResponse {
     let format: ImageFormat = ImageFormat::from_path(path).unwrap();
     debug!("Image format found.");
 
-    let mut reader = BufReader::new(File::open(String::from(PATH) + &path).map_err(|_| {
+
+    let file: File = File::open(String::from(PATH) + &path).map_err(|_| {
         error!("Could not find image at {path}");
         ImageNotFoundError { path: path.to_string() }
-    })?);
+    })?;
+    let content_length = file.metadata().map_err(|_| {
+        error!("Could not retrieve file metadata {path}");
+        ImageNotFoundError { path: path.to_string() }
+    })?.size();
+
+    let mut reader = BufReader::new(file);
     let mut buf: Vec<u8> = Vec::new();
     reader.read_to_end(&mut buf).expect("TODO: panic message");
     debug!("Found image at {path}");
@@ -54,7 +70,12 @@ pub fn process(path: &str) -> InternalResponse {
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, encoding_timing].to_vec());
     info!("Success simple {}: {path}", process_timer.elapsed().as_millis());
-    Ok((body, server_timing, format_extension))
+    Ok(ImageData {
+        body,
+        server_timing,
+        format_extension,
+        content_length,
+    })
 }
 
 
@@ -121,13 +142,19 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     debug!("Image was written for {path}");
 
     let format_extension: String = get_format_extension(format);
+    let content_length: u64 = bytes.len() as u64;
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
     let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
     info!("Success resize {}: {path}?{query}", process_timer.elapsed().as_millis());
-    Ok((body, server_timing, format_extension))
+    Ok(ImageData {
+        body,
+        server_timing,
+        format_extension,
+        content_length,
+    })
 }
 
 fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
@@ -172,12 +199,18 @@ pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
 
 pub fn transform(response: InternalResponse) -> ResultResponse {
     match response {
-        Ok((body, server_timing, format_extension)) => {
+        Ok(ImageData {
+               body,
+               server_timing,
+               format_extension,
+               content_length
+           }) => {
             Ok(Response::builder()
                 .status(StatusCode::OK)
                 .header(IMAGE_HEADER_NAME, IMAGE_HEADER_ROOT.to_owned() + &*format_extension)
                 .header(SERVER_TIMING_HEADER_NAME, server_timing.to_string())
                 .header(CACHE_CONTROL_HEADER_NAME, CACHE_CONTROL_HEADER_VALUE)
+                .header("content-length", content_length)
                 .body(body)?)
         }
         Err(e) => Ok(e.handle()?),
