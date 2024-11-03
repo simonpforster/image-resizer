@@ -3,7 +3,7 @@ use std::error;
 use std::fs::File;
 use std::os::unix::fs::MetadataExt;
 use std::time::Instant;
-use fast_image_resize::{ResizeAlg, ResizeOptions, Resizer, SrcCropping};
+use fast_image_resize::{CropBox, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use fast_image_resize::FilterType;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
@@ -90,12 +90,6 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let (image, format) = read_image(path)?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
-    let opts = ResizeOptions {
-        algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
-        cropping: SrcCropping::None,
-        mul_div_alpha: true,
-    };
-
     let mut new_image: DynamicImage;
     let mut resizer: Resizer = Resizer::new();
 
@@ -103,26 +97,26 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     match dimension {
         Width(new_width) => {
             if new_width < image.width() {
-                let new_height = (new_width * image.height()) as f64 / (image.width() as f64);
+                let new_height = (new_width * image.height()) / image.width();
                 new_image = DynamicImage::new(
                     new_width,
-                    new_height.round() as u32,
+                    new_height.round(),
                     image.color(),
                 );
-                let _ = resizer.resize(&image, &mut new_image, &opts);
+                let _ = resizer.resize(&image, &mut new_image, &opts(image.width(), image.height(), new_width, new_height));
             } else {
                 new_image = image;
             }
         }
         Height(new_height) => {
             if new_height < image.height() {
-                let new_width = (new_height * image.width()) as f64 / (image.height() as f64);
+                let new_width = (new_height * image.width()) / image.height();
                 new_image = DynamicImage::new(
-                    new_width.round() as u32,
+                    new_width.round(),
                     new_height,
                     image.color(),
                 );
-                let _ = resizer.resize(&image, &mut new_image, &opts);
+                let _ = resizer.resize(&image, &mut new_image, &opts(image.width(), image.height(), new_width, new_height));
             } else {
                 new_image = image;
             }
@@ -155,6 +149,16 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
         format_extension,
         content_length,
     })
+}
+
+fn opts(src_width: u32, src_height: u32, dst_width: u32, dst_height: u32) -> ResizeOptions {
+    ResizeOptions {
+        algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
+        cropping: SrcCropping::Crop(
+            CropBox::fit_src_into_dst_size(src_width, src_height, dst_width, dst_height, None)
+        ),
+        mul_div_alpha: true,
+    }
 }
 
 fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
