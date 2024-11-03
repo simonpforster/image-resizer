@@ -100,7 +100,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 let new_height = (new_width * image.height()) / image.width();
                 new_image = DynamicImage::new(
                     new_width,
-                    new_height.round(),
+                    new_height,
                     image.color(),
                 );
                 let _ = resizer.resize(&image, &mut new_image, &opts(image.width(), image.height(), new_width, new_height));
@@ -112,7 +112,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
             if new_height < image.height() {
                 let new_width = (new_height * image.width()) / image.height();
                 new_image = DynamicImage::new(
-                    new_width.round(),
+                    new_width,
                     new_height,
                     image.color(),
                 );
