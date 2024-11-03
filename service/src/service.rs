@@ -1,6 +1,7 @@
 use std::io::{BufReader, Cursor, Read};
 use std::error;
 use std::fs::File;
+use std::ops::Div;
 use std::os::unix::fs::MetadataExt;
 use std::time::Instant;
 use fast_image_resize::{ResizeAlg, ResizeOptions, Resizer, SrcCropping};
@@ -103,7 +104,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     match dimension {
         Width(new_width) => {
             if new_width < image.width() {
-                let new_height = (new_width * image.height()).div_ceil(image.width());
+                let new_height = (new_width * image.height()) / (image.width());
                 new_image = DynamicImage::new(
                     new_width,
                     new_height,
@@ -116,7 +117,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
         }
         Height(new_height) => {
             if new_height < image.height() {
-                let new_width = (new_height * image.width()).div_ceil(image.height());
+                let new_width = (new_height * image.width()) / (image.height());
                 new_image = DynamicImage::new(
                     new_width,
                     new_height,
