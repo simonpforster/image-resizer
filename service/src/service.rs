@@ -108,6 +108,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 info!("calculated original_dimensions are {width} / {height} = {aspect_ratio}");
 
                 let new_height = (new_width * image.height()) as f64 / image.width() as f64;
+                let new_aspect_ratio = new_width as f64 / new_height;
                 info!("calculated new_dimensions are {new_width} / {new_height} = {new_aspect_ratio}");
                 new_image = DynamicImage::new(
                     new_width,
