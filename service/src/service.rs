@@ -78,6 +78,11 @@ pub fn process(path: &str) -> InternalResponse {
     })
 }
 
+const OPTS: ResizeOptions = ResizeOptions {
+    algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
+    cropping: SrcCropping::FitIntoDestination((0.5, 0.5)),
+    mul_div_alpha: true,
+};
 
 pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let process_timer: Instant = Instant::now();
@@ -113,7 +118,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 let _ = resizer.resize(
                     &image,
                     &mut new_image,
-                    &opts(image.width(), image.height(), new_width, new_height),
+                    OPTS,
                 );
             } else {
                 new_image = image;
@@ -130,7 +135,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 let _ = resizer.resize(
                     &image,
                     &mut new_image,
-                    &opts(image.width(), image.height(), new_width, new_height),
+                    OPTS,
                 );
             } else {
                 new_image = image;
@@ -164,16 +169,6 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
         format_extension,
         content_length,
     })
-}
-
-fn opts(src_width: u32, src_height: u32, dst_width: u32, dst_height: u32) -> ResizeOptions {
-    ResizeOptions {
-        algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
-        cropping: SrcCropping::Crop(
-            CropBox::fit_src_into_dst_size(src_width, src_height, dst_width, dst_height, None)
-        ),
-        mul_div_alpha: true,
-    }
 }
 
 fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
