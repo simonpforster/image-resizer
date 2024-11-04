@@ -49,7 +49,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
         tokio::task::spawn(async move {
             if let Err(err) = http2::Builder::new(TokioExecutor)
-                // `service_fn` converts our function in a `Service`
                 .serve_connection(io, service_fn(router))
                 .await
             {

@@ -1292,7 +1292,7 @@ dependencies = [
 
 [[package]]
 name = "service"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "fast_image_resize",
  "futures",
@@ -1303,7 +1303,6 @@ dependencies = [
  "image",
  "log",
  "log4rs",
- "rand",
  "tokio",
  "tokio-util",
 ]
