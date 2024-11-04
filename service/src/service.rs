@@ -3,7 +3,7 @@ use std::error;
 use std::fs::File;
 use std::os::unix::fs::MetadataExt;
 use std::time::Instant;
-use fast_image_resize::{CropBox, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
+use fast_image_resize::{ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use fast_image_resize::FilterType;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
@@ -118,7 +118,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 let _ = resizer.resize(
                     &image,
                     &mut new_image,
-                    OPTS,
+                    &OPTS,
                 );
             } else {
                 new_image = image;
@@ -135,7 +135,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 let _ = resizer.resize(
                     &image,
                     &mut new_image,
-                    OPTS,
+                    &OPTS,
                 );
             } else {
                 new_image = image;
