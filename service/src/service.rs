@@ -112,7 +112,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 info!("calculated new_dimensions are {new_width} / {new_height} = {new_aspect_ratio}");
                 new_image = DynamicImage::new(
                     new_width,
-                    new_height.round() as u32,
+                    new_height.round() as u32 - 1,
                     image.color(),
                 );
                 let _ = resizer.resize(
