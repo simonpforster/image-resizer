@@ -3,8 +3,9 @@ use std::error;
 use std::fs::File;
 use std::os::unix::fs::MetadataExt;
 use std::time::Instant;
-use fast_image_resize::{ResizeAlg, ResizeOptions, Resizer, SrcCropping};
+use fast_image_resize::{IntoImageView, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use fast_image_resize::FilterType;
+use fast_image_resize::images::Image;
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
@@ -95,47 +96,39 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let (image, format) = read_image(path)?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
-    let mut new_image: DynamicImage;
+    let mut new_image: Image;
     let mut resizer: Resizer = Resizer::new();
 
     let resizing_timer = Instant::now();
     match dimension {
         Width(new_width) => {
-            if new_width < image.width() {
-                let new_height_f = (new_width * image.height()) as f64 / image.width() as f64;
-                let new_height = new_height_f.round() as u32;
-                let new_aspect_ratio = new_width as f64 / new_height as f64;
-                info!("calculated new_dimensions are {new_width} / {new_height} = {new_aspect_ratio}");
-                new_image = DynamicImage::new(
-                    new_width,
-                    new_height,
-                    image.color(),
-                );
-                let _ = resizer.resize(
-                    &image,
-                    &mut new_image,
-                    &OPTS,
-                );
-            } else {
-                new_image = image;
-            }
+            let new_height_f = (new_width * image.height()) as f64 / image.width() as f64;
+            let new_height = new_height_f.round() as u32;
+            let new_aspect_ratio = new_width as f64 / new_height as f64;
+            info!("calculated new_dimensions are {new_width} / {new_height} = {new_aspect_ratio}");
+            new_image = Image::new(
+                new_width,
+                new_height,
+                image.pixel_type().unwrap(),
+            );
+            let _ = resizer.resize(
+                &image,
+                &mut new_image,
+                &OPTS,
+            );
         }
         Height(new_height) => {
-            if new_height < image.height() {
-                let new_width = (new_height * image.width()) / image.height();
-                new_image = DynamicImage::new(
-                    new_width,
-                    new_height,
-                    image.color(),
-                );
-                let _ = resizer.resize(
-                    &image,
-                    &mut new_image,
-                    &OPTS,
-                );
-            } else {
-                new_image = image;
-            }
+            let new_width = (new_height * image.width()) / image.height();
+            new_image = Image::new(
+                new_width,
+                new_height,
+                image.pixel_type().unwrap(),
+            );
+            let _ = resizer.resize(
+                &image,
+                &mut new_image,
+                &OPTS,
+            );
         }
     };
     let resizing_timing: Timing = Timing::new("res", resizing_timer.elapsed(), None);
@@ -143,14 +136,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     debug!("Image resized, writing image to buffer");
 
     let encoding_timer = Instant::now();
-    let mut bytes: Vec<u8> = Vec::new();
-    let mut cursor = Cursor::new(&mut bytes);
-    new_image.write_to(&mut cursor, format).map_err(|_| {
-        error!("Could not write the image for {path}");
-        ImageWriteError { path: path.to_string() }
-    })?;
-    debug!("Image was written for {path}");
-
+    let bytes: Vec<u8> = new_image.into_vec();
     let format_extension: String = get_format_extension(format);
     let content_length: u64 = bytes.len() as u64;
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
