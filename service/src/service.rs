@@ -80,7 +80,7 @@ pub fn process(path: &str) -> InternalResponse {
 
 const OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
-    cropping: SrcCropping::FitIntoDestination((0.5, 0.5)),
+    cropping: SrcCropping::FitIntoDestination((0f64, 0f64)),
     mul_div_alpha: true,
 };
 
