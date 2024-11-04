@@ -1,4 +1,4 @@
-use std::io::{BufReader, BufWriter, Cursor, Read};
+use std::io::{BufReader, BufWriter, Read};
 use std::error;
 use std::fs::File;
 use std::os::unix::fs::MetadataExt;
@@ -101,8 +101,8 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
     let mut new_image: Image;
     let mut resizer: Resizer = Resizer::new();
-    let mut new_width = 0u32;
-    let mut new_height = 0u32;
+    let new_width;
+    let new_height;
 
     let resizing_timer = Instant::now();
     match dimension {
@@ -175,7 +175,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
 
     let encoding_timer = Instant::now();
-    let bytes: Vec<u8> = result_buf.buffer().into_vec();
+    let bytes: Vec<u8> = result_buf.buffer().to_vec();
     let format_extension: String = get_format_extension(format);
     let content_length: u64 = bytes.len() as u64;
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
