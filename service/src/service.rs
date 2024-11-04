@@ -1,4 +1,4 @@
-use std::io::{BufReader, Cursor, Read};
+use std::io::{BufReader, BufWriter, Cursor, Read};
 use std::error;
 use std::fs::File;
 use std::os::unix::fs::MetadataExt;
@@ -11,7 +11,10 @@ use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
-use image::{DynamicImage, ImageFormat, ImageReader};
+use image::{DynamicImage, ImageEncoder, ImageFormat, ImageReader};
+use image::codecs::jpeg::JpegEncoder;
+use image::codecs::png::PngEncoder;
+use image::ImageFormat::{Jpeg, Png};
 use log::{debug, error, info, warn};
 use crate::dimension::{decode, Dimension};
 use crate::dimension::Dimension::{Height, Width};
@@ -98,12 +101,15 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
     let mut new_image: Image;
     let mut resizer: Resizer = Resizer::new();
+    let mut new_width = 0u32;
+    let mut new_height = 0u32;
 
     let resizing_timer = Instant::now();
     match dimension {
-        Width(new_width) => {
+        Width(given) => {
+            new_width = given;
             let new_height_f = (new_width * image.height()) as f64 / image.width() as f64;
-            let new_height = new_height_f.round() as u32;
+            new_height = new_height_f.round() as u32;
             let new_aspect_ratio = new_width as f64 / new_height as f64;
             info!("calculated new_dimensions are {new_width} / {new_height} = {new_aspect_ratio}");
             new_image = Image::new(
@@ -117,8 +123,9 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                 &OPTS,
             );
         }
-        Height(new_height) => {
-            let new_width = (new_height * image.width()) / image.height();
+        Height(given) => {
+            new_height = given;
+            new_width = (new_height * image.width()) / image.height();
             new_image = Image::new(
                 new_width,
                 new_height,
@@ -134,6 +141,38 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let resizing_timing: Timing = Timing::new("res", resizing_timer.elapsed(), None);
 
     debug!("Image resized, writing image to buffer");
+
+    let mut result_buf = BufWriter::new(Vec::new());
+    match format {
+        Png => {
+            PngEncoder::new(&mut result_buf)
+                .write_image(
+                    new_image.buffer(),
+                    new_width,
+                    new_height,
+                    image.color().into(),
+                ).unwrap()
+        }
+        Jpeg => {
+            JpegEncoder::new(&mut result_buf)
+                .write_image(
+                    new_image.buffer(),
+                    new_width,
+                    new_height,
+                    image.color().into(),
+                ).unwrap()
+        }
+        _ => {
+            JpegEncoder::new(&mut result_buf)
+                .write_image(
+                    new_image.buffer(),
+                    new_width,
+                    new_height,
+                    image.color().into(),
+                ).unwrap()
+        }
+    };
+
 
     let encoding_timer = Instant::now();
     let bytes: Vec<u8> = new_image.into_vec();
