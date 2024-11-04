@@ -175,7 +175,7 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
 
 
     let encoding_timer = Instant::now();
-    let bytes: Vec<u8> = new_image.into_vec();
+    let bytes: Vec<u8> = result_buf.buffer().into_vec();
     let format_extension: String = get_format_extension(format);
     let content_length: u64 = bytes.len() as u64;
     let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
