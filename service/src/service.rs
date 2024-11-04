@@ -98,12 +98,18 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
         Width(new_width) => {
             if new_width < image.width() {
                 let new_height = (new_width * image.height()) / image.width();
+                let new_aspect_ratio = new_width as f64 / new_height as f64;
+                debug!("calculated new_dimensions are {new_width} / {new_height} = {new_aspect_ratio}");
                 new_image = DynamicImage::new(
                     new_width,
                     new_height,
                     image.color(),
                 );
-                let _ = resizer.resize(&image, &mut new_image, &opts(image.width(), image.height(), 50, 50));
+                let _ = resizer.resize(
+                    &image,
+                    &mut new_image,
+                    &opts(image.width(), image.height(), new_width, new_height),
+                );
             } else {
                 new_image = image;
             }
@@ -116,7 +122,11 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
                     new_height,
                     image.color(),
                 );
-                let _ = resizer.resize(&image, &mut new_image, &opts(image.width(), image.height(), new_width, new_height));
+                let _ = resizer.resize(
+                    &image,
+                    &mut new_image,
+                    &opts(image.width(), image.height(), new_width, new_height),
+                );
             } else {
                 new_image = image;
             }
