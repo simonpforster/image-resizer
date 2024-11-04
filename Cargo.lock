@@ -338,7 +338,6 @@ dependencies = [
  "document-features",
  "image",
  "num-traits",
- "rayon",
  "thiserror",
 ]
 
@@ -1305,7 +1304,6 @@ dependencies = [
  "log",
  "log4rs",
  "rand",
- "rayon",
  "tokio",
  "tokio-util",
 ]

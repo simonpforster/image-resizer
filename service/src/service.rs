@@ -3,8 +3,7 @@ use std::error;
 use std::fs::File;
 use std::os::unix::fs::MetadataExt;
 use std::time::Instant;
-use fast_image_resize::{ResizeAlg, ResizeOptions, Resizer, SrcCropping};
-use fast_image_resize::FilterType;
+use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
@@ -78,6 +77,11 @@ pub fn process(path: &str) -> InternalResponse {
     })
 }
 
+const OPTS: ResizeOptions = ResizeOptions {
+    algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
+    cropping: SrcCropping::FitIntoDestination((0.5, 0.5)),
+    mul_div_alpha: true,
+};
 
 pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let process_timer: Instant = Instant::now();
@@ -90,42 +94,36 @@ pub fn process_resize(path: &str, query: &str) -> InternalResponse {
     let (image, format) = read_image(path)?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
-    let opts = ResizeOptions {
-        algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
-        cropping: SrcCropping::None,
-        mul_div_alpha: true,
-    };
-
     let mut new_image: DynamicImage;
     let mut resizer: Resizer = Resizer::new();
 
     let resizing_timer = Instant::now();
     match dimension {
         Width(new_width) => {
-            if new_width < image.width() {
-                let new_height = (new_width * image.height()) as f64 / (image.width() as f64);
-                new_image = DynamicImage::new(
-                    new_width,
-                    new_height.round() as u32,
-                    image.color(),
-                );
-                let _ = resizer.resize(&image, &mut new_image, &opts);
-            } else {
-                new_image = image;
-            }
+            let new_height = ((new_width * image.height()) as f64 / image.width() as f64).round() as u32;
+            new_image = DynamicImage::new(
+                new_width,
+                new_height,
+                image.color(),
+            );
+            let _ = resizer.resize(
+                &image,
+                &mut new_image,
+                &OPTS,
+            );
         }
         Height(new_height) => {
-            if new_height < image.height() {
-                let new_width = (new_height * image.width()) as f64 / (image.height() as f64);
-                new_image = DynamicImage::new(
-                    new_width.round() as u32,
-                    new_height,
-                    image.color(),
-                );
-                let _ = resizer.resize(&image, &mut new_image, &opts);
-            } else {
-                new_image = image;
-            }
+            let new_width = ((new_height * image.width()) as f64 / image.height() as f64) as u32;
+            new_image = DynamicImage::new(
+                new_width,
+                new_height,
+                image.color(),
+            );
+            let _ = resizer.resize(
+                &image,
+                &mut new_image,
+                &OPTS,
+            );
         }
     };
     let resizing_timing: Timing = Timing::new("res", resizing_timer.elapsed(), None);
