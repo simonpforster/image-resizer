@@ -167,10 +167,12 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
             let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
-            let _ = tokio::spawn(async {
+            let new_path: String = path.to_string();
+            let borr = new_image_cache_item.clone();
+            let _ = tokio::spawn(async move {
                 info!("writing to cache");
                 let mut write_guard = CACHE.write().await;
-                let _ = write_guard.write_image(path, new_image_cache_item.clone());
+                let _ = write_guard.write_image(&new_path, borr);
             });
             new_image_cache_item
         });
