@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let io = TokioIo::new(stream);
 
         tokio::task::spawn(async move {
-            if let Err(err) =  http1::Builder::new() // http2::Builder::new(TokioExecutor)
+            if let Err(err) = http2::Builder::new(TokioExecutor)
                 .serve_connection(io, service_fn(router))
                 .await
             {
