@@ -25,7 +25,6 @@ lazy_static! {
     static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
 }
 
-
 #[derive(Clone)]
 pub struct TokioExecutor;
 

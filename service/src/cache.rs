@@ -19,12 +19,12 @@ impl Cache {
         Cache { map: HashMap::new() }
     }
 
-    pub fn get_image(&self, url: &str) -> Result<&ImageCacheItem, CacheError> {
+    pub fn read_image(&self, url: &str) -> Result<&ImageCacheItem, CacheError> {
         info!("attempting to get: {}", url);
         self.map.get(url).ok_or(CacheError {})
     }
 
-    pub fn put_image(&mut self, url: &str, format: ImageFormat, image: DynamicImage) -> Result<ImageCacheItem, CacheError> {
+    pub fn write_image(&mut self, url: &str, format: ImageFormat, image: DynamicImage) -> Result<ImageCacheItem, CacheError> {
         info!("attempting to put: {}", url);
         self.map.insert(url.to_string(), ImageCacheItem { time: Instant::now(), format, image }).ok_or_else(|| CacheError {})
     }

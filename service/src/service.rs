@@ -149,7 +149,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
 
 async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
 
-    let maybe_image_cached_item = CACHE.read().await.get_image(path).map(|d| d.clone());
+    let maybe_image_cached_item = CACHE.read().await.read_image(path).map(|d| d.clone());
 
     let image_cache_item = maybe_image_cached_item
         .unwrap_or_else(|_| {
@@ -165,10 +165,11 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
-            block_on(async {
+            let image_cached = block_on(async {
                 info!("writing to cache");
-                CACHE.write().await.put_image(path, format, image).unwrap()
-            })
+                CACHE.write().await.write_image(path, format, image)
+            });
+            image_cached.unwrap()
         });
 
     debug!("Image decoded at {path}");
