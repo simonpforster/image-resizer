@@ -171,8 +171,9 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
             let _ = block_on(async {
                 info!("writing to cache");
                 let mut write_guard = CACHE.write().await;
-                write_guard.write_image(path, new_image_cache_item.clone())
-            }).unwrap();
+                let _ = write_guard.write_image(path, new_image_cache_item.clone());
+                drop(write_guard)
+            });
             new_image_cache_item
         });
 
