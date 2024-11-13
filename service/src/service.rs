@@ -2,8 +2,7 @@ use std::io::Cursor;
 use std::error;
 use std::time::Instant;
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
-use futures::executor::block_on;
-use futures_util::{stream, FutureExt, StreamExt};
+use futures_util::{stream, StreamExt};
 use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
@@ -168,11 +167,11 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
             let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
-            let _ = async {
+            let _ = tokio::spawn(async {
                 info!("writing to cache");
                 let mut write_guard = CACHE.write().await;
                 let _ = write_guard.write_image(path, new_image_cache_item.clone());
-            };
+            });
             new_image_cache_item
         });
 

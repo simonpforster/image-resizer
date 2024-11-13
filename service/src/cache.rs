@@ -20,12 +20,12 @@ impl Cache {
     }
 
     pub fn read_image(&self, url: &str) -> Result<&ImageCacheItem, CacheError> {
-        info!("attempting to get: {}", url);
+        info!("cache hit: {}", url);
         self.map.get(url).ok_or(CacheError {})
     }
 
     pub fn write_image(&mut self, url: &str, cache_item: ImageCacheItem) -> Result<Option<ImageCacheItem>, CacheError> {
-        info!("attempting to put: {}", url);
+        info!("cache miss: {}", url);
         Ok(self.map.insert(url.to_string(), cache_item))
     }
 }
