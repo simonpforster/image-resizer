@@ -170,7 +170,6 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
             let new_path: String = path.to_string();
             let borr = new_image_cache_item.clone();
             let _ = tokio::spawn(async move {
-                info!("writing to cache");
                 let mut write_guard = CACHE.write().await;
                 let _ = write_guard.write_image(&new_path, borr);
             });
