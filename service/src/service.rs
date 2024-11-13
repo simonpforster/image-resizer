@@ -149,7 +149,9 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
 
 async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
 
-    let maybe_image_cached_item = CACHE.read().await.read_image(path).map(|d| d.clone());
+    let read_lock = CACHE.read().await;
+    let maybe_image_cached_item = read_lock.read_image(path).map(|d| d.clone());
+    drop(read_lock);
 
     let image_cache_item = maybe_image_cached_item
         .unwrap_or_else(|_| {
