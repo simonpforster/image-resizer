@@ -19,8 +19,7 @@ use crate::error::ErrorResponse::*;
 use crate::server_timing::ServerTiming;
 use crate::server_timing::timing::Timing;
 
-// const PATH: &str = "/mnt";
-const PATH: &str = "/Users/sfe34/Me/image-resizer/oliviazuo-portfolio";
+const PATH: &str = "/mnt";
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const CACHE_CONTROL_HEADER_NAME: &str = "cache-control";
