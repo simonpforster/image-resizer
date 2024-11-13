@@ -165,11 +165,12 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
-            let image_cached = block_on(async {
+            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
+            let _ = block_on(async {
                 info!("writing to cache");
-                CACHE.write().await.write_image(path, format, image)
-            });
-            image_cached.unwrap()
+                CACHE.write().await.write_image(path, new_image_cache_item.clone())
+            }).unwrap();
+            new_image_cache_item
         });
 
     debug!("Image decoded at {path}");

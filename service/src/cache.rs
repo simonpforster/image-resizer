@@ -5,7 +5,7 @@ use log::info;
 
 #[derive(Debug, Clone)]
 pub struct ImageCacheItem {
-    time: Instant,
+    pub time: Instant,
     pub format: ImageFormat,
     pub image: DynamicImage,
 }
@@ -24,9 +24,9 @@ impl Cache {
         self.map.get(url).ok_or(CacheError {})
     }
 
-    pub fn write_image(&mut self, url: &str, format: ImageFormat, image: DynamicImage) -> Result<ImageCacheItem, CacheError> {
+    pub fn write_image(&mut self, url: &str, cache_item: ImageCacheItem) -> Result<Option<ImageCacheItem>, CacheError> {
         info!("attempting to put: {}", url);
-        self.map.insert(url.to_string(), ImageCacheItem { time: Instant::now(), format, image }).ok_or_else(|| CacheError {})
+        Ok(self.map.insert(url.to_string(), cache_item))
     }
 }
 
