@@ -1,16 +1,17 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
-
-use hyper::server::conn::http2;
+use hyper::server::conn::{http1, http2};
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
+use lazy_static::lazy_static;
 use log::{info, LevelFilter, SetLoggerError};
 use log4rs::{Config, Handle};
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use tokio::net::TcpListener;
-
+use tokio::sync::RwLock;
+use crate::cache::Cache;
 use crate::router::router;
 
 mod service;
@@ -18,6 +19,11 @@ mod router;
 mod error;
 mod dimension;
 mod server_timing;
+mod cache;
+
+lazy_static! {
+    static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
+}
 
 #[derive(Clone)]
 pub struct TokioExecutor;
