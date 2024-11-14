@@ -40,10 +40,11 @@ impl Cache {
             cache_item.time.elapsed() >= Duration::from_secs(30)
         }).map(|(k, _)| { k.to_owned() }).collect();
 
+        info!("Should cull {} items.", removables.len());
         let _ = removables.iter().for_each(|path| {
             let cull_timer_spec = Instant::now();
             let _ = self.map.remove(path);
-            info!("Dropping {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
+            info!("Culling {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
         });
 
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
