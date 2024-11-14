@@ -38,7 +38,7 @@ impl Cache {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
         let removables: Vec<&String> = self.map.iter().filter(|(_, cache_item)| {
-            cache_item.time.elapsed() >= Duration::from_secs(300)
+            cache_item.time.elapsed() >= Duration::from_secs(30)
         }).map(|(k, _)| { k }).collect();
 
         let removers: Vec<ImageCacheItem> = removables.iter().map(|path| {
@@ -48,8 +48,6 @@ impl Cache {
         tokio::task::spawn( async move {
             drop(removers)
         });
-
-        self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(300));
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
 }
