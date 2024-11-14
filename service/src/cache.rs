@@ -37,6 +37,7 @@ impl Cache {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
         self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(300));
+        self.map.shrink_to_fit();
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
 }
