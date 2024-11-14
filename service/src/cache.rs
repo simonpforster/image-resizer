@@ -44,9 +44,9 @@ impl Cache {
 
         let _ = removables.iter().map(|path| {
             let cull_timer_spec = Instant::now();
-            self.map.remove(path);
+            let d = self.map.remove(path);
             info!("Dropping {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
-        }).flatten().collect();
+        });
 
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
