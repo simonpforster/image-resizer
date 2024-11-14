@@ -41,7 +41,6 @@ pub async fn process(path: &str) -> InternalResponse {
     let process_timer: Instant = Instant::now();
 
     let decoding_timer = Instant::now();
-
     let (image, format) = read_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
@@ -81,7 +80,6 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
     debug!("Processing query parameters");
     let dimension: Dimension = decode(query)?;
     debug!("Dimensions parsed");
-
     let (image, format) = read_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
@@ -147,13 +145,12 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
 }
 
 async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-
     let read_lock = CACHE.read().await;
     let maybe_image_cached_item = read_lock.read_image(path).map(|d| d.clone());
     drop(read_lock);
 
     let image_cache_item = maybe_image_cached_item
-        .unwrap_or_else(|_| {
+        .unwrap_or_else(|| {
             let reader = ImageReader::open(String::from(PATH) + &path).map_err(|_| {
                 error!("Could not find image at {path}");
                 ImageNotFoundError { path: path.to_string() }
@@ -166,13 +163,10 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
-            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
+            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image};
             let new_path: String = path.to_string();
             let borr = new_image_cache_item.clone();
-            let _ = tokio::spawn(async move {
-                let mut write_guard = CACHE.write().await;
-                let _ = write_guard.write_image(&new_path, borr);
-            });
+            tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, borr); });
             new_image_cache_item
         });
 

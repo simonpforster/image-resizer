@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use image::{DynamicImage, ImageFormat};
 use log::info;
 
@@ -19,16 +19,26 @@ impl Cache {
         Cache { map: HashMap::new() }
     }
 
-    pub fn read_image(&self, url: &str) -> Result<&ImageCacheItem, CacheError> {
-        info!("cache hit: {}", url);
-        self.map.get(url).ok_or(CacheError {})
+    pub fn read_image(&self, path: &str) -> Option<&ImageCacheItem> {
+        let cache_item = self.map.get(path);
+        match cache_item {
+            Some(_) => info!("Cache hit: {}", path),
+            None => info!("Cache miss: {}", path),
+        }
+        cache_item
     }
 
-    pub fn write_image(&mut self, url: &str, cache_item: ImageCacheItem) -> Result<Option<ImageCacheItem>, CacheError> {
-        info!("cache miss: {}", url);
-        Ok(self.map.insert(url.to_string(), cache_item))
+    pub fn write_image(&mut self, path: &str, cache_item: ImageCacheItem) -> () {
+        self.map.insert(path.to_string(), cache_item);
+        info!("Cache write: {}", path);
+    }
+
+    pub fn cull(&mut self) -> () {
+        let cull_timer = Instant::now();
+        let start_length = self.map.len();
+        self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(300));
+        self.map.shrink_to_fit();
+        let diff = start_length - self.map.len();
+        if diff > 1 { info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), diff) };
     }
 }
-
-#[derive(Debug)]
-pub struct CacheError {}

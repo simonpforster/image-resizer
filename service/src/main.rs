@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
-use hyper::server::conn::{http1, http2};
+use std::time::Duration;
+use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
@@ -11,6 +12,7 @@ use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
+use tokio::time;
 use crate::cache::Cache;
 use crate::router::router;
 
@@ -41,6 +43,15 @@ where
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = logger_setup();
+
+    // Cache culler task
+    tokio::task::spawn(async {
+        let mut interval = time::interval(Duration::from_secs(60));
+        loop {
+            interval.tick().await;
+            CACHE.write().await.cull();
+        }
+    });
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
