@@ -1,6 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::{Duration, Instant};
-use http_body_util::BodyExt;
 use image::{DynamicImage, ImageFormat};
 use log::info;
 
@@ -12,12 +11,12 @@ pub struct ImageCacheItem {
 }
 
 pub struct Cache {
-    map: HashMap<String, ImageCacheItem>,
+    map: BTreeMap<String, ImageCacheItem>,
 }
 
 impl Cache {
     pub fn default() -> Cache {
-        Cache { map: HashMap::new() }
+        Cache { map: BTreeMap::new() }
     }
 
     pub fn read_image(&self, path: &str) -> Option<&ImageCacheItem> {
@@ -37,17 +36,7 @@ impl Cache {
     pub fn cull(&mut self) -> () {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
-        let removables: Vec<&String> = self.map.iter().filter(|(_, cache_item)| {
-            cache_item.time.elapsed() >= Duration::from_secs(30)
-        }).map(|(k, _)| { k }).collect();
-
-        let removers: Vec<ImageCacheItem> = removables.iter().map(|path| {
-           self.map.remove(path)
-        }).flatten().collect();
-
-        tokio::task::spawn( async move {
-            drop(removers)
-        });
+        self.map.retain(|_, cache_item| { cache_item.time.elapsed() < Duration::from_secs(30) });
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
 }
