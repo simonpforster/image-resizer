@@ -50,9 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut interval = time::interval(Duration::from_secs(20));
         loop {
             interval.tick().await;
-            let cull_timer = Instant::now();
             CACHE.write().await.cull();
-            info!("In write lock queue + use for {} ms.", cull_timer.elapsed().as_millis());
         }
     });
 
