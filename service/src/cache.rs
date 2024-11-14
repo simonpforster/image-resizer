@@ -1,5 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::time::{Duration, Instant};
+use http_body_util::BodyExt;
 use image::{DynamicImage, ImageFormat};
 use log::info;
 
@@ -11,12 +13,12 @@ pub struct ImageCacheItem {
 }
 
 pub struct Cache {
-    map: BTreeMap<String, ImageCacheItem>,
+    map: HashMap<String, ImageCacheItem>,
 }
 
 impl Cache {
     pub fn default() -> Cache {
-        Cache { map: BTreeMap::new() }
+        Cache { map: HashMap::new() }
     }
 
     pub fn read_image(&self, path: &str) -> Option<&ImageCacheItem> {
@@ -36,7 +38,16 @@ impl Cache {
     pub fn cull(&mut self) -> () {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
-        self.map.retain(|_, cache_item| { cache_item.time.elapsed() < Duration::from_secs(30) });
+        let removables: Vec<&String> = self.map.iter().filter(|(_, cache_item)| {
+            cache_item.time.elapsed() >= Duration::from_secs(30)
+        }).map(|(k, _)| { k }).collect();
+
+        let _ = removables.iter().map(|path| {
+            let cull_timer_spec = Instant::now();
+            self.map.remove(path);
+            info!("Dropping {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
+        }).flatten().collect();
+
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
 }
