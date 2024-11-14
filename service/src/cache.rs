@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use http_body_util::BodyExt;
 use image::{DynamicImage, ImageFormat};
 use log::info;
 
@@ -36,7 +37,19 @@ impl Cache {
     pub fn cull(&mut self) -> () {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
-        self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(30));
+        let removables: Vec<&String> = self.map.iter().filter(|(_, cache_item)| {
+            cache_item.time.elapsed() >= Duration::from_secs(300)
+        }).map(|(k, _)| { k }).collect();
+
+        let removers: Vec<ImageCacheItem> = removables.iter().map(|path| {
+           self.map.remove(path)
+        }).flatten().collect();
+
+        tokio::task::spawn( async move {
+            drop(removers)
+        });
+
+        self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(300));
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
 }
