@@ -13,7 +13,6 @@ use log4rs::encode::pattern::PatternEncoder;
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tokio::time;
-use tokio::time::Instant;
 use crate::cache::Cache;
 use crate::router::router;
 
