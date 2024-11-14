@@ -30,7 +30,7 @@ impl Cache {
     }
 
     pub fn cull(&mut self) -> () {
-        info!("Culling cache.");
+        let cull_timer = Instant::now();
         let expired_paths: Vec<String> = self.map.iter()
             .filter(|(_, item)| {
                 item.time.elapsed() >= Duration::from_secs(300)
@@ -38,9 +38,7 @@ impl Cache {
             .map(|(path, _)| {
                 path.to_string()
             }).collect();
-        expired_paths.iter().for_each(|path| {
-            info!("Culling: {}", path);
-            self.map.remove(path);
-        });
+        expired_paths.iter().for_each(|path| { self.map.remove(path); });
+        info!("Culled {} items, took {}ms.", expired_paths.len(), cull_timer.elapsed().as_millis());
     }
 }
