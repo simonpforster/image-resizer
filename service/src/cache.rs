@@ -38,6 +38,7 @@ impl Cache {
         let start_length = self.map.len();
         self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(300));
         self.map.shrink_to_fit();
-        info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
+        let diff = start_length - self.map.len();
+        if diff > 1 { info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), diff) };
     }
 }
