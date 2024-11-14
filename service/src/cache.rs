@@ -33,7 +33,7 @@ impl Cache {
         info!("Culling cache.");
         let expired_paths: Vec<String> = self.map.iter()
             .filter(|(_, item)| {
-                item.time.elapsed() >= Duration::from_secs(60)
+                item.time.elapsed() >= Duration::from_secs(300)
             })
             .map(|(path, _)| {
                 path.to_string()
