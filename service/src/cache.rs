@@ -39,6 +39,7 @@ impl Cache {
                 path.to_string()
             }).collect();
         expired_paths.iter().for_each(|path| {
+            info!("Culling {}", path);
             self.map.remove(path);
         });
     }
