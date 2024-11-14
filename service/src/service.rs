@@ -1,5 +1,6 @@
 use std::io::Cursor;
 use std::error;
+use std::ops::Deref;
 use std::time::Instant;
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use futures_util::{stream, StreamExt};
@@ -96,7 +97,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
                 image.color(),
             );
             let _ = resizer.resize(
-                &image,
+                image.deref(),
                 &mut new_image,
                 &OPTS,
             );
@@ -109,7 +110,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
                 image.color(),
             );
             let _ = resizer.resize(
-                &image,
+                image.deref(),
                 &mut new_image,
                 &OPTS,
             );
@@ -144,7 +145,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
     })
 }
 
-async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
+async fn read_image(path: &str) -> Result<(Box<DynamicImage>, ImageFormat), ErrorResponse> {
     let read_lock = CACHE.read().await;
     let maybe_image_cached_item = read_lock.read_image(path).map(|d| d.clone());
     drop(read_lock);
@@ -171,7 +172,7 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
         });
 
     debug!("Image decoded at {path}");
-    Ok((*image_cache_item.image, image_cache_item.format))
+    Ok((image_cache_item.image, image_cache_item.format))
 }
 
 fn get_format_extension(image_format: ImageFormat) -> String {
