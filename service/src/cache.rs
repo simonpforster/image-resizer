@@ -7,7 +7,7 @@ use log::info;
 pub struct ImageCacheItem {
     pub time: Instant,
     pub format: ImageFormat,
-    pub image: Box<DynamicImage>,
+    pub image: DynamicImage,
 }
 
 pub struct Cache {
@@ -36,17 +36,7 @@ impl Cache {
     pub fn cull(&mut self) -> () {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
-        let removables: Vec<String> = self.map.iter().filter(|(_, cache_item)| {
-            cache_item.time.elapsed() >= Duration::from_secs(30)
-        }).map(|(k, _)| { k.to_owned() }).collect();
-
-        info!("Should cull {} items.", removables.len());
-        let _ = removables.iter().for_each(|path| {
-            let cull_timer_spec = Instant::now();
-            let _ = self.map.remove(path).unwrap().format;
-            info!("Culling {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
-        });
-
+        self.map.retain(|_, cache_item| cache_item.time.elapsed() < Duration::from_secs(30));
         info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), start_length - self.map.len());
     }
 }

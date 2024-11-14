@@ -97,7 +97,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
                 image.color(),
             );
             let _ = resizer.resize(
-                image.deref(),
+                &image,
                 &mut new_image,
                 &OPTS,
             );
@@ -110,7 +110,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
                 image.color(),
             );
             let _ = resizer.resize(
-                image.deref(),
+                &image,
                 &mut new_image,
                 &OPTS,
             );
@@ -145,7 +145,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
     })
 }
 
-async fn read_image(path: &str) -> Result<(Box<DynamicImage>, ImageFormat), ErrorResponse> {
+async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
     let read_lock = CACHE.read().await;
     let maybe_image_cached_item = read_lock.read_image(path).map(|d| d.clone());
     drop(read_lock);
@@ -164,7 +164,7 @@ async fn read_image(path: &str) -> Result<(Box<DynamicImage>, ImageFormat), Erro
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
-            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image: Box::new(image) };
+            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image};
             let new_path: String = path.to_string();
             let borr = new_image_cache_item.clone();
             tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, borr); });
