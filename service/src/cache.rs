@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ptr::read;
 use std::time::{Duration, Instant};
 use image::{DynamicImage, ImageFormat};
 use log::info;
@@ -38,7 +37,7 @@ impl Cache {
     }
 
     pub fn cull(&mut self) -> () {
-        let cull_timer = Instant::now();
+        let find_expired_timer = Instant::now();
         let expired_paths: Vec<String> = self.map.iter()
             .filter(|(_, item)| {
                 item.time.elapsed() >= Duration::from_secs(300)
@@ -46,7 +45,10 @@ impl Cache {
             .map(|(path, _)| {
                 path.to_string()
             }).collect();
+        let expired_elapsed = find_expired_timer.elapsed().as_millis();
+        info!("Expired found ({} ms).", expired_elapsed);
+        let cull_timer = Instant::now();
         expired_paths.iter().for_each(|path| { self.map.remove(path); });
-        info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), expired_paths.len());
+        info!("Cache cleared ({} ms) {} items.",  cull_timer.elapsed().as_millis(), expired_paths.len());
     }
 }
