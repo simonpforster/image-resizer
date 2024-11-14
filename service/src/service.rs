@@ -163,7 +163,7 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
             }).unwrap();
-            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
+            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image: Box::new(image) };
             let new_path: String = path.to_string();
             let borr = new_image_cache_item.clone();
             tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, borr); });
@@ -171,7 +171,7 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
         });
 
     debug!("Image decoded at {path}");
-    Ok((image_cache_item.image, image_cache_item.format))
+    Ok((*image_cache_item.image, image_cache_item.format))
 }
 
 fn get_format_extension(image_format: ImageFormat) -> String {

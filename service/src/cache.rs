@@ -7,7 +7,7 @@ use log::info;
 pub struct ImageCacheItem {
     pub time: Instant,
     pub format: ImageFormat,
-    pub image: DynamicImage,
+    pub image: Box<DynamicImage>,
 }
 
 pub struct Cache {
@@ -43,7 +43,7 @@ impl Cache {
         info!("Should cull {} items.", removables.len());
         let _ = removables.iter().for_each(|path| {
             let cull_timer_spec = Instant::now();
-            let _ = self.map.remove(path);
+            let _ = self.map.remove(path).unwrap().format;
             info!("Culling {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
         });
 
