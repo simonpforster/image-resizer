@@ -41,7 +41,6 @@ pub async fn process(path: &str) -> InternalResponse {
     let process_timer: Instant = Instant::now();
 
     let decoding_timer = Instant::now();
-
     let (image, format) = read_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
@@ -81,7 +80,6 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
     debug!("Processing query parameters");
     let dimension: Dimension = decode(query)?;
     debug!("Dimensions parsed");
-
     let (image, format) = read_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 

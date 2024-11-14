@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ptr::read;
 use std::time::{Duration, Instant};
 use image::{DynamicImage, ImageFormat};
 use log::info;
@@ -20,13 +21,20 @@ impl Cache {
     }
 
     pub fn read_image(&self, path: &str) -> Option<&ImageCacheItem> {
-        info!("Cache hit: {}", path);
-        self.map.get(path)
+        let read_timer = Instant::now();
+        let cache_item = self.map.get(path);
+        let elapsed = read_timer.elapsed().as_millis();
+        match cache_item {
+            Some(_) => info!("Cache hit ({} ms): {}", elapsed, path),
+            None => info!("Cache miss ({} ms): {}", elapsed, path),
+        }
+        cache_item
     }
 
     pub fn write_image(&mut self, path: &str, cache_item: ImageCacheItem) -> () {
-        info!("Cache miss: {}", path);
+        let read_timer = Instant::now();
         self.map.insert(path.to_string(), cache_item);
+        info!("Cache write ({} ms): {}", read_timer.elapsed().as_millis(), path);
     }
 
     pub fn cull(&mut self) -> () {
@@ -39,6 +47,6 @@ impl Cache {
                 path.to_string()
             }).collect();
         expired_paths.iter().for_each(|path| { self.map.remove(path); });
-        info!("Culled {} items, took {}ms.", expired_paths.len(), cull_timer.elapsed().as_millis());
+        info!("Cache culled ({} ms) {} items.",  cull_timer.elapsed().as_millis(), expired_paths.len());
     }
 }
