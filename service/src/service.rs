@@ -1,6 +1,5 @@
 use std::io::Cursor;
 use std::error;
-use std::ops::Deref;
 use std::time::Instant;
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use futures_util::{stream, StreamExt};

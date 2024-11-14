@@ -46,7 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Cache culler task
     tokio::task::spawn(async {
-        let mut interval = time::interval(Duration::from_secs(20));
+        let mut interval = time::interval(Duration::from_secs(60));
         loop {
             interval.tick().await;
             CACHE.write().await.cull();
