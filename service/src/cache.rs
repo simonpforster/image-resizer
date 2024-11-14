@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::time::{Duration, Instant};
-use http_body_util::BodyExt;
 use image::{DynamicImage, ImageFormat};
 use log::info;
 
@@ -38,13 +36,13 @@ impl Cache {
     pub fn cull(&mut self) -> () {
         let cull_timer = Instant::now();
         let start_length = self.map.len();
-        let removables: Vec<&String> = self.map.iter().filter(|(_, cache_item)| {
+        let removables: Vec<String> = self.map.iter().filter(|(_, cache_item)| {
             cache_item.time.elapsed() >= Duration::from_secs(30)
-        }).map(|(k, _)| { k }).collect();
+        }).map(|(k, _)| { k.to_owned() }).collect();
 
         let _ = removables.iter().map(|path| {
             let cull_timer_spec = Instant::now();
-            let d = self.map.remove(path);
+            let _ = self.map.remove(path);
             info!("Dropping {} took {} ms. ", path, cull_timer_spec.elapsed().as_millis());
         });
 
