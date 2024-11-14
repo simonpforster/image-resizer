@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use image::{DynamicImage, ImageFormat};
 use log::info;
 
@@ -19,16 +19,27 @@ impl Cache {
         Cache { map: HashMap::new() }
     }
 
-    pub fn read_image(&self, url: &str) -> Result<&ImageCacheItem, CacheError> {
-        info!("cache hit: {}", url);
-        self.map.get(url).ok_or(CacheError {})
+    pub fn read_image(&self, path: &str) -> Option<&ImageCacheItem> {
+        info!("Cache hit: {}", path);
+        self.map.get(path)
     }
 
-    pub fn write_image(&mut self, url: &str, cache_item: ImageCacheItem) -> Result<Option<ImageCacheItem>, CacheError> {
-        info!("cache miss: {}", url);
-        Ok(self.map.insert(url.to_string(), cache_item))
+    pub fn write_image(&mut self, path: &str, cache_item: ImageCacheItem) -> () {
+        info!("Cache miss: {}", path);
+        self.map.insert(path.to_string(), cache_item);
+    }
+
+    pub fn cull(&mut self) -> () {
+        info!("Culling cache.");
+        let expired_paths: Vec<String> = self.map.iter()
+            .filter(|(_, item)| {
+                item.time.elapsed() >= Duration::from_secs(60)
+            })
+            .map(|(path, _)| {
+                path.to_string()
+            }).collect();
+        expired_paths.iter().for_each(|path| {
+            self.map.remove(path);
+        });
     }
 }
-
-#[derive(Debug)]
-pub struct CacheError {}
