@@ -13,6 +13,7 @@ use log4rs::encode::pattern::PatternEncoder;
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tokio::time;
+use tokio::time::Instant;
 use crate::cache::Cache;
 use crate::router::router;
 
@@ -46,10 +47,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Cache culler task
     tokio::task::spawn(async {
-        let mut interval = time::interval(Duration::from_secs(60));
+        let mut interval = time::interval(Duration::from_secs(20));
         loop {
             interval.tick().await;
+            let cull_timer = Instant::now();
             CACHE.write().await.cull();
+            info!("In write lock queue + use for {} ms.", cull_timer.elapsed().as_millis());
         }
     });
 
