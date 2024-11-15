@@ -12,7 +12,7 @@ lazy_static! {
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let http_request_timer = Instant::now();
     let url = String::from(BUCKET_URL) + path;
-    let resp = CLIENT.get(&url).version(Version::HTTP_2).send().await?;
+    let resp = CLIENT.get(&url).send().await?;
     let status = resp.status();
     let headers  = resp.headers().clone();
     let version = resp.version();
