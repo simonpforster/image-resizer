@@ -5,7 +5,7 @@ use tokio::time::Instant;
 const BUCKET_URL: &str = "https://storage.googleapis.com/image-resizer_europe-west1";
 
 lazy_static! {
-    static ref CLIENT: reqwest::Client = reqwest::Client::new();
+    static ref CLIENT: reqwest::Client = bucket_client();
 }
 
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
@@ -19,4 +19,11 @@ pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     info!("Code {}:{:?} after {} for {}", status, version, http_request_timer.elapsed().as_millis(), path);
     info!("headers {:#?}", headers);
     bytes
+}
+
+fn bucket_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .https_only(true)
+        .connection_verbose(true)
+        .build().unwrap()
 }
