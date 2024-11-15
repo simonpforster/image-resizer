@@ -1,3 +1,4 @@
+use hyper::Version;
 use lazy_static::lazy_static;
 use log::info;
 use tokio::time::Instant;
@@ -11,7 +12,7 @@ lazy_static! {
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let http_request_timer = Instant::now();
     let url = String::from(BUCKET_URL) + path;
-    let resp = CLIENT.get(&url).send().await?;
+    let resp = CLIENT.get(&url).version(Version::HTTP_3).send().await?;
     let status = resp.status();
     let headers  = resp.headers().clone();
     let version = resp.version();
@@ -24,6 +25,7 @@ pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
 fn bucket_client() -> reqwest::Client {
     reqwest::Client::builder()
         .https_only(true)
+        .http3_prior_knowledge()
         .use_rustls_tls()
         .connection_verbose(true)
         .build().unwrap()
