@@ -11,8 +11,8 @@ use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::*;
 use crate::domain::ExtensionProvider;
 use crate::image_service::{read_image, resize_image};
-use crate::server_timing::ServerTiming;
-use crate::server_timing::timing::Timing;
+use crate::domain::server_timing::ServerTiming;
+use crate::domain::server_timing::timing::Timing;
 
 pub struct ImageData {
     pub body: BoxBody<Bytes, hyper::Error>,

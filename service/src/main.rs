@@ -12,7 +12,6 @@ use crate::router::router;
 
 mod service;
 mod router;
-mod server_timing;
 mod logging;
 mod response_handler;
 mod image_service;

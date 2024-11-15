@@ -2,7 +2,7 @@ use image::ImageFormat;
 
 pub mod error;
 pub mod dimension;
-
+pub mod server_timing;
 
 pub trait ExtensionProvider {
     fn get_format_extension(&self) -> String;
