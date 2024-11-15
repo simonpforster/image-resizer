@@ -30,4 +30,6 @@ EXPOSE 8080
 
 USER 65534
 
+ENV RUSTFLAGS="--cfg reqwest_unstable"
+
 CMD ["/usr/local/bin/service"]
