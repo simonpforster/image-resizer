@@ -57,7 +57,7 @@ pub async fn process(path: &str) -> InternalResponse {
 
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, encoding_timing].to_vec());
-    info!("Success simple {}: {path}", process_timer.elapsed().as_millis());
+    debug!("Success simple {} ms: {path}", process_timer.elapsed().as_millis());
     Ok(ImageData {
         body,
         server_timing,
@@ -134,7 +134,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
-    info!("Success resize {}: {path}?{query}", process_timer.elapsed().as_millis());
+    debug!("Success resize {} ms: {path}?{query}", process_timer.elapsed().as_millis());
     Ok(ImageData {
         body,
         server_timing,

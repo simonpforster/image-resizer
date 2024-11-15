@@ -3,13 +3,14 @@ use std::error;
 use http_body_util::{BodyExt, combinators::BoxBody, Full};
 use hyper::{Method, Request, Response, StatusCode};
 use hyper::body::Bytes;
-use log::info;
+use log::{debug, info};
 use crate::service::{process, process_resize, transform};
 
 pub async fn router(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>,  Box<dyn error::Error + Send + Sync>> {
-    info!("Incoming {} request at {}", req.method().as_str(), req.uri());
+    let request_id = req.headers().get("X-Cloud-Trace-Context").map(|d| {d.to_str().unwrap_or("none")}).unwrap_or("none");
+    debug!("request_id: {}", request_id);
     match (req.method(), req.uri().path(), req.uri().query()) {
         (&Method::GET, "/private/status", None) => {
             let mut ok = Response::new(full("OK"));

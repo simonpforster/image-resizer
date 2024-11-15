@@ -15,7 +15,7 @@ pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
 }
 
 fn bucket_client() -> reqwest::Client {
-    info!("init client");
+    info!("Initializing bucket client.");
     reqwest::Client::builder()
         .https_only(true)
         .use_rustls_tls()
