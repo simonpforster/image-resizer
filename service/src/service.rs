@@ -158,7 +158,10 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 ImageFormat::Jpeg
             });
 
-            let bytes= bucket_request(path).await.unwrap();
+            let bytes= bucket_request(path).await.map_err(|_| {
+                error!("Could not decode image at {path}");
+                ImageNotFoundError { path: path.to_string() }
+            })?;
 
             let image = image::load_from_memory_with_format(bytes.as_bytes(), format).map_err(|_| {
                 error!("Could not decode image at {path}");
