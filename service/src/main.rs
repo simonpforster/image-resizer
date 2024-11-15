@@ -8,20 +8,20 @@ use log::info;
 use tokio::net::TcpListener;
 use tokio::sync::{RwLock};
 use tokio::time;
-use crate::cache::Cache;
 use crate::logging::logger_setup;
 use crate::router::router;
+use crate::repository::cache_repository::Cache;
 
 mod service;
 mod router;
 mod error;
 mod dimension;
 mod server_timing;
-mod cache;
-mod bucket_client;
 mod logging;
 mod response_handler;
 mod image_service;
+mod client;
+mod repository;
 
 lazy_static! {
     static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
