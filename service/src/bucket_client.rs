@@ -1,7 +1,5 @@
 use lazy_static::lazy_static;
 use log::info;
-use reqwest::Version;
-use tokio::time::Instant;
 
 const BUCKET_URL: &str = "https://storage.googleapis.com/image-resizer_europe-west1";
 
