@@ -11,6 +11,6 @@ pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let resp = reqwest::get(&url).await?;
     let bytes = resp.bytes().await.map(|d| {d.as_bytes().to_vec()});
     info!("Code {} after {} for {}", resp.status(), http_request_timer.elapsed().as_millis(), path);
-    info!("headers", resp.headers());
+    info!("headers {}", resp.headers());
     bytes
 }
