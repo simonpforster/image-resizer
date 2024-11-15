@@ -19,4 +19,4 @@ futures = "0.3.31"
 futures-util = "0.3.31"
 lazy_static = "1.5.0"
 rustls = "0.23.16"
-reqwest = { version = "0.12.9", features = ["rustls-tls"] }
+reqwest = { version = "0.12.9", features = ["http2", "rustls-tls"] }
