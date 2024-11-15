@@ -1,4 +1,4 @@
-use std::io::Cursor;
+use std::io::{BufReader, Cursor};
 use std::error;
 use std::time::Instant;
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
@@ -9,7 +9,8 @@ use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
 use image::{DynamicImage, ImageFormat, ImageReader};
 use log::{debug, error, info, warn};
-use crate::CACHE;
+use crate::{CACHE};
+use crate::bucket_client::bucket_request;
 use crate::cache::ImageCacheItem;
 use crate::dimension::{decode, Dimension};
 use crate::dimension::Dimension::{Height, Width};
@@ -149,26 +150,27 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
     let maybe_image_cached_item = read_lock.read_image(path).map(|d| d.clone());
     drop(read_lock);
 
-    let image_cache_item = maybe_image_cached_item
-        .unwrap_or_else(|| {
-            let reader = ImageReader::open(String::from(PATH) + &path).map_err(|_| {
-                error!("Could not find image at {path}");
-                ImageNotFoundError { path: path.to_string() }
-            }).unwrap();
-            let format: ImageFormat = reader.format().unwrap_or_else(|| {
+    let image_cache_item = match maybe_image_cached_item {
+        Some(item) => item,
+        None => {
+            let format: ImageFormat = ImageFormat::from_path(String::from(PATH) + &path).unwrap_or_else(|_| {
                 warn!("Defaulting to Jpeg format for {path}");
                 ImageFormat::Jpeg
             });
-            let image = reader.decode().map_err(|_| {
+
+            let bytes= bucket_request(&(String::from(PATH) + &path)).await.unwrap();
+
+            let image = image::load_from_memory_with_format(bytes, format).map_err(|_| {
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
-            }).unwrap();
-            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image};
+            })?;
+            let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
             let new_path: String = path.to_string();
             let borr = new_image_cache_item.clone();
             tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, borr); });
             new_image_cache_item
-        });
+        },
+    };
 
     debug!("Image decoded at {path}");
     Ok((image_cache_item.image, image_cache_item.format))
