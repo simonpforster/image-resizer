@@ -55,45 +55,12 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
     let (image, format) = read_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
-    let mut new_image: DynamicImage;
-    let mut resizer: Resizer = Resizer::new();
-
     let resizing_timer = Instant::now();
 
-    match opt_dimension {
-        Some(dimension) => {
-            match dimension {
-                Width(new_width) => {
-                    let new_height = ((new_width * image.height()) as f64 / image.width() as f64).round() as u32;
-                    new_image = DynamicImage::new(
-                        new_width,
-                        new_height,
-                        image.color(),
-                    );
-                    let _ = resizer.resize(
-                        &image,
-                        &mut new_image,
-                        &OPTS,
-                    );
-                }
-                Height(new_height) => {
-                    let new_width = ((new_height * image.width()) as f64 / image.height() as f64) as u32;
-                    new_image = DynamicImage::new(
-                        new_width,
-                        new_height,
-                        image.color(),
-                    );
-                    let _ = resizer.resize(
-                        &image,
-                        &mut new_image,
-                        &OPTS,
-                    );
-                }
-            };
-        },
-        None => { new_image = image; },
-    }
-
+    let new_image: DynamicImage = match opt_dimension {
+        Some(dimension) => resize_image(dimension, image),
+        None => image,
+    };
 
     let resizing_timing: Timing = Timing::new("res", resizing_timer.elapsed(), None);
 
@@ -159,6 +126,40 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
 
     debug!("Image decoded at {path}");
     Ok((image_cache_item.image, image_cache_item.format))
+}
+
+fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
+    let mut dst_image: DynamicImage;
+    let mut resizer: Resizer = Resizer::new();
+    match dimension {
+        Width(new_width) => {
+            let new_height = ((new_width * src_image.height()) as f64 / src_image.width() as f64).round() as u32;
+            dst_image = DynamicImage::new(
+                new_width,
+                new_height,
+                src_image.color(),
+            );
+            let _ = resizer.resize(
+                &src_image,
+                &mut dst_image,
+                &OPTS,
+            );
+        }
+        Height(new_height) => {
+            let new_width = ((new_height * src_image.width()) as f64 / src_image.height() as f64) as u32;
+            dst_image = DynamicImage::new(
+                new_width,
+                new_height,
+                src_image.color(),
+            );
+            let _ = resizer.resize(
+                &src_image,
+                &mut dst_image,
+                &OPTS,
+            );
+        }
+    };
+    dst_image
 }
 
 fn get_format_extension(image_format: ImageFormat) -> String {
