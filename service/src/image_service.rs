@@ -1,11 +1,10 @@
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use image::{DynamicImage, ImageFormat};
 use log::debug;
+use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
 use crate::dimension::Dimension;
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
-use crate::repository::bucket_repository::BucketRepository;
-use crate::repository::cache_repository::CacheRepository;
 use crate::repository::ImageRepository;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
@@ -19,16 +18,16 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     1. Memory Cache
 ///     2. Bucket (HTTP/2)
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-    let maybe_image_cached_item = (CacheRepository {}).read_image(path).await.ok();
+    let maybe_image_cached_item = CACHE_REPOSITORY.read_image(path).await.ok();
 
     let image_cache_item = match maybe_image_cached_item {
         Some(item) => item,
         None => {
-            let new_image_cache_item = (BucketRepository {}).read_image(path).await?;
+            let new_image_cache_item = BUCKET_REPOSITORY.read_image(path).await?;
 
             let new_path: String = path.to_string();
             let cache_image = new_image_cache_item.clone();
-            tokio::task::spawn(async move { (CacheRepository {}).write_image(new_path, cache_image) });
+            tokio::task::spawn(async move { CACHE_REPOSITORY.write_image(new_path, cache_image) });
 
             new_image_cache_item
         }
