@@ -1,7 +1,6 @@
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use image::{DynamicImage, ImageFormat};
 use log::debug;
-use crate::CACHE;
 use crate::dimension::Dimension;
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
@@ -20,7 +19,6 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     1. Memory Cache
 ///     2. Bucket (HTTP/2)
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-
     let maybe_image_cached_item = (CacheRepository {}).read_image(path).await.ok();
 
     let image_cache_item = match maybe_image_cached_item {
@@ -30,7 +28,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 
             let new_path: String = path.to_string();
             let cache_image = new_image_cache_item.clone();
-            tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, cache_image); });
+            tokio::task::spawn(async move { (CacheRepository {}).write_image(new_path, cache_image) });
 
             new_image_cache_item
         }

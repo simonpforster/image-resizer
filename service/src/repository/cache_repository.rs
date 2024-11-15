@@ -1,10 +1,16 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use lazy_static::lazy_static;
 use log::{debug, info};
-use crate::CACHE;
+use tokio::sync::RwLock;
+use tokio::time;
 use crate::error::ErrorResponse;
 use crate::error::ErrorResponse::ImageNotFoundInCacheError;
 use crate::repository::{ImageItem, ImageRepository};
+
+lazy_static! {
+    static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
+}
 
 pub struct Cache {
     map: HashMap<String, ImageItem>,
@@ -40,6 +46,20 @@ impl Cache {
 }
 
 pub struct CacheRepository {}
+
+impl CacheRepository {
+    pub async fn write_image(&self, new_path: String, cache_item: ImageItem) -> Result<(), ErrorResponse> {
+        Ok(CACHE.write().await.write_image(&new_path, cache_item))
+    }
+
+    pub async fn cull_images_loop(&self) -> () {
+        let mut interval = time::interval(Duration::from_secs(60));
+        loop {
+            interval.tick().await;
+            CACHE.write().await.cull();
+        }
+    }
+}
 
 impl ImageRepository for CacheRepository {
     async fn read_image(&self, path: &str) -> Result<ImageItem, ErrorResponse> {

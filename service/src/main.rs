@@ -1,16 +1,12 @@
 use std::net::SocketAddr;
-use std::time::Duration;
 use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
-use lazy_static::lazy_static;
 use log::info;
 use tokio::net::TcpListener;
-use tokio::sync::{RwLock};
-use tokio::time;
 use crate::logging::logger_setup;
+use crate::repository::cache_repository::CacheRepository;
 use crate::router::router;
-use crate::repository::cache_repository::Cache;
 
 mod service;
 mod router;
@@ -22,10 +18,6 @@ mod response_handler;
 mod image_service;
 mod client;
 mod repository;
-
-lazy_static! {
-    static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
-}
 
 #[derive(Clone)]
 pub struct TokioExecutor;
@@ -45,13 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = logger_setup();
 
     // Cache culler task
-    tokio::task::spawn(async {
-        let mut interval = time::interval(Duration::from_secs(60));
-        loop {
-            interval.tick().await;
-            CACHE.write().await.cull();
-        }
-    });
+    tokio::task::spawn((CacheRepository {}).cull_images_loop());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
