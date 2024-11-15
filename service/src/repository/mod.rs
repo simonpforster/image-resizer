@@ -13,5 +13,5 @@ pub struct ImageItem {
 }
 
 pub trait ImageRepository {
-    fn read_image(&self, path: &str) -> Result<ImageItem, ErrorResponse>;
+    async fn read_image(&self, path: &str) -> Result<ImageItem, ErrorResponse>;
 }

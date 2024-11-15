@@ -5,7 +5,8 @@ use crate::CACHE;
 use crate::dimension::Dimension;
 use crate::dimension::Dimension::{Height, Width};
 use crate::error::ErrorResponse;
-use crate::repository::bucket_repository::get_image_from_bucket;
+use crate::repository::bucket_repository::BucketRepository;
+use crate::repository::cache_repository::CacheRepository;
 use crate::repository::ImageRepository;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
@@ -19,14 +20,13 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     1. Memory Cache
 ///     2. Bucket (HTTP/2)
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-    let read_lock = CACHE.read().await;
-    let maybe_image_cached_item = read_lock.read_image(path).ok();
-    drop(read_lock);
+
+    let maybe_image_cached_item = (CacheRepository {}).read_image(path).await.ok();
 
     let image_cache_item = match maybe_image_cached_item {
         Some(item) => item,
         None => {
-            let new_image_cache_item = get_image_from_bucket(path).await?;
+            let new_image_cache_item = (BucketRepository {}).read_image(path).await?;
 
             let new_path: String = path.to_string();
             let cache_image = new_image_cache_item.clone();
