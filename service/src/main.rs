@@ -9,7 +9,7 @@ use log::{info, LevelFilter, SetLoggerError};
 use log4rs::{Config, Handle};
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::config::{Appender, Logger, Root};
-use log4rs::encode::pattern::PatternEncoder;
+use log4rs::encode::json::{JsonEncoder};
 use tokio::net::TcpListener;
 use tokio::sync::{RwLock};
 use tokio::time;
@@ -77,11 +77,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 fn logger_setup() -> Result<Handle, SetLoggerError> {
-    let level: LevelFilter = LevelFilter::from_str("info").unwrap();
+    let level: LevelFilter = LevelFilter::from_str("debug").unwrap();
 
     let stdout: ConsoleAppender = ConsoleAppender::builder()
         .target(Target::Stdout)
-        .encoder(Box::new(PatternEncoder::new("{m}{n}")))
+        .encoder(Box::new(JsonEncoder::new()))
         .build();
 
     let log_conf: log4rs::Config = Config::builder()

@@ -2037,7 +2037,7 @@ dependencies = [
 
 [[package]]
 name = "service"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "fast_image_resize",
  "futures",
@@ -2220,7 +2220,7 @@ dependencies = [
  "fastrand",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
