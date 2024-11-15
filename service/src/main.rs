@@ -1,12 +1,10 @@
 use std::net::SocketAddr;
-use std::str::FromStr;
 use std::time::Duration;
 use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
-use log::{info, LevelFilter, SetLoggerError};
-use log4rs::{Config, Handle};
+use log::info;
 use tokio::net::TcpListener;
 use tokio::sync::{RwLock};
 use tokio::time;

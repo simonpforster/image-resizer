@@ -3,7 +3,7 @@ use log4rs::{Config, Handle};
 use log::{LevelFilter, SetLoggerError};
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::config::{Appender, Logger, Root};
-use crate::logging::encoder::MyEncoder;
+use crate::logging::encoder::CloudEncoder;
 
 mod log_message;
 mod encoder;
@@ -13,7 +13,7 @@ pub fn logger_setup() -> Result<Handle, SetLoggerError> {
 
     let stdout: ConsoleAppender = ConsoleAppender::builder()
         .target(Target::Stdout)
-        .encoder(Box::new(MyEncoder::new()))
+        .encoder(Box::new(CloudEncoder::new()))
         .build();
 
     let log_conf: log4rs::Config = Config::builder()

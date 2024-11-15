@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use image::{DynamicImage, ImageFormat};
-use log::info;
+use log::{debug, info};
 
 #[derive(Debug, Clone)]
 pub struct ImageCacheItem {
@@ -22,15 +22,15 @@ impl Cache {
     pub fn read_image(&self, path: &str) -> Option<&ImageCacheItem> {
         let cache_item = self.map.get(path);
         match cache_item {
-            Some(_) => info!("Cache hit: {}", path),
-            None => info!("Cache miss: {}", path),
+            Some(_) => debug!("Cache hit: {}", path),
+            None => debug!("Cache miss: {}", path),
         }
         cache_item
     }
 
     pub fn write_image(&mut self, path: &str, cache_item: ImageCacheItem) -> () {
         self.map.insert(path.to_string(), cache_item);
-        info!("Cache write: {}", path);
+        debug!("Cache write: {}", path);
     }
 
     pub fn cull(&mut self) -> () {
