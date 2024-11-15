@@ -19,8 +19,6 @@ use crate::error::ErrorResponse::*;
 use crate::server_timing::ServerTiming;
 use crate::server_timing::timing::Timing;
 
-const PATH: &str = "/mnt";
-
 const IMAGE_HEADER_NAME: &str = "content-type";
 const CACHE_CONTROL_HEADER_NAME: &str = "cache-control";
 const CACHE_CONTROL_HEADER_VALUE: &str = "max-age=31536000";
@@ -153,7 +151,7 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
     let image_cache_item = match maybe_image_cached_item {
         Some(item) => item,
         None => {
-            let format: ImageFormat = ImageFormat::from_path(String::from(PATH) + &path).unwrap_or_else(|_| {
+            let format: ImageFormat = ImageFormat::from_path(path).unwrap_or_else(|_| {
                 warn!("Defaulting to Jpeg format for {path}");
                 ImageFormat::Jpeg
             });
@@ -170,7 +168,10 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
             let new_image_cache_item = ImageCacheItem { time: Instant::now(), format, image };
             let new_path: String = path.to_string();
             let borr = new_image_cache_item.clone();
+
+            // write to cache in seperate task so that it doesn't block the response to the client
             tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, borr); });
+
             new_image_cache_item
         },
     };
