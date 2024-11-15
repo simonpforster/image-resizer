@@ -25,7 +25,7 @@ jobs:
 
       - name: Flags
         run: |
-          echo "RUSTFLAGS='--cfg reqwest_unstable'" >> $GITHUB_ENV
+          echo "RUSTFLAGS=--cfg reqwest_unstable" >> $GITHUB_ENV
 
       - name: Check
         run: cargo check --workspace
