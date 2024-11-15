@@ -1,9 +1,10 @@
-use crate::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError, ImageNotFoundInCacheError, ImageWriteError};
+use crate::domain::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError, ImageNotFoundInCacheError, ImageWriteError};
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use hyper::{Response, StatusCode};
 use std::error;
 use std::fmt::{Display, Formatter};
+use crate::router::full;
 
 #[derive(Debug)]
 pub enum ErrorResponse
@@ -63,5 +64,5 @@ impl error::Error for ErrorResponse {}
 fn error_response(status_code: StatusCode, message: String) -> hyper::http::Result<Response<BoxBody<Bytes, hyper::Error>>> {
     Response::builder()
         .status(status_code)
-        .body(crate::service::full(message))
+        .body(full(message))
 }

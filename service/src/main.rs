@@ -12,14 +12,13 @@ use crate::router::router;
 
 mod service;
 mod router;
-mod error;
-mod dimension;
 mod server_timing;
 mod logging;
 mod response_handler;
 mod image_service;
 mod client;
 mod repository;
+mod domain;
 
 lazy_static! {
     static ref CACHE_REPOSITORY: CacheRepository = CacheRepository {};

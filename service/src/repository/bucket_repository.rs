@@ -2,8 +2,8 @@ use std::time::Instant;
 use image::{DynamicImage, EncodableLayout, ImageFormat};
 use log::{error, warn};
 use crate::client::bucket_client::bucket_request;
-use crate::error::ErrorResponse;
-use crate::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError};
+use crate::domain::error::ErrorResponse;
+use crate::domain::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError};
 use crate::repository::{ImageItem, ImageRepository};
 
 pub struct BucketRepository {}

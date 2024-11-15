@@ -1,14 +1,15 @@
 use std::io::{Cursor};
 use std::time::Instant;
 use futures_util::{stream, StreamExt};
-use http_body_util::{BodyExt, Full, StreamBody};
+use http_body_util::StreamBody;
 use http_body_util::combinators::BoxBody;
 use hyper::body::{Frame, Bytes};
-use image::{DynamicImage, ImageFormat};
+use image::{DynamicImage};
 use log::{debug, error};
-use crate::dimension::{decode, Dimension};
-use crate::error::ErrorResponse;
-use crate::error::ErrorResponse::*;
+use crate::domain::dimension::{decode, Dimension};
+use crate::domain::error::ErrorResponse;
+use crate::domain::error::ErrorResponse::*;
+use crate::domain::ExtensionProvider;
 use crate::image_service::{read_image, resize_image};
 use crate::server_timing::ServerTiming;
 use crate::server_timing::timing::Timing;
@@ -75,18 +76,3 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
     })
 }
 
-trait ExtensionProvider {
-    fn get_format_extension(&self) -> String;
-}
-
-impl ExtensionProvider for ImageFormat {
-    fn get_format_extension(&self) -> String {
-        self.extensions_str().to_owned().iter().next().map(|ext| "/".to_owned() + ext).unwrap_or_else(|| "".to_owned())
-    }
-}
-
-pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
-    Full::new(chunk.into())
-        .map_err(|never| match never {})
-        .boxed()
-}

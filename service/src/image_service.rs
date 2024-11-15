@@ -2,9 +2,9 @@ use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCroppi
 use image::{DynamicImage, ImageFormat};
 use log::debug;
 use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
-use crate::dimension::Dimension;
-use crate::dimension::Dimension::{Height, Width};
-use crate::error::ErrorResponse;
+use crate::domain::dimension::Dimension;
+use crate::domain::dimension::Dimension::{Height, Width};
+use crate::domain::error::ErrorResponse;
 use crate::repository::ImageRepository;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {

@@ -4,8 +4,8 @@ use lazy_static::lazy_static;
 use log::{debug, info};
 use tokio::sync::RwLock;
 use tokio::time;
-use crate::error::ErrorResponse;
-use crate::error::ErrorResponse::ImageNotFoundInCacheError;
+use crate::domain::error::ErrorResponse;
+use crate::domain::error::ErrorResponse::ImageNotFoundInCacheError;
 use crate::repository::{ImageItem, ImageRepository};
 
 lazy_static! {

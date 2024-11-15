@@ -1,6 +1,6 @@
 use std::time::Instant;
 use image::{DynamicImage, ImageFormat};
-use crate::error::ErrorResponse;
+use crate::domain::error::ErrorResponse;
 
 pub(crate) mod cache_repository;
 pub(crate) mod bucket_repository;
