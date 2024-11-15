@@ -1,8 +1,9 @@
-use crate::service::{ImageData, InternalResponse};
+use crate::service::InternalResponse;
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use hyper::{Response, StatusCode};
 use std::error;
+use crate::domain::ImageData;
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const CACHE_CONTROL_HEADER_NAME: &str = "cache-control";

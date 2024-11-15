@@ -9,17 +9,10 @@ use log::{debug, error};
 use crate::domain::dimension::{decode, Dimension};
 use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::*;
-use crate::domain::ExtensionProvider;
+use crate::domain::{ExtensionProvider, ImageData};
 use crate::image_service::{read_image, resize_image};
 use crate::domain::server_timing::ServerTiming;
 use crate::domain::server_timing::timing::Timing;
-
-pub struct ImageData {
-    pub body: BoxBody<Bytes, hyper::Error>,
-    pub server_timing: ServerTiming,
-    pub format_extension: String,
-    pub content_length: u64,
-}
 
 pub type InternalResponse = Result<ImageData, ErrorResponse>;
 
