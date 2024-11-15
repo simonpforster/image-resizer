@@ -25,6 +25,6 @@ fn bucket_client() -> reqwest::Client {
     reqwest::Client::builder()
         .https_only(true)
         .connection_verbose(true)
-        .http3_prior_knowledge()
+        .http2_prior_knowledge()
         .build().unwrap()
 }
