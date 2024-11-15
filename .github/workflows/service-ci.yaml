@@ -23,10 +23,6 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v4
 
-      - name: Flags
-        run: |
-          echo "RUSTFLAGS=--cfg reqwest_unstable" >> $GITHUB_ENV
-
       - name: Check
         run: cargo check --workspace
 
