@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use crate::dimension::Dimension::{Height, Width};
-use crate::error::ErrorResponse;
-use crate::error::ErrorResponse::ImageWriteError;
+use crate::domain::dimension::Dimension::{Height, Width};
+use crate::domain::error::ErrorResponse;
+use crate::domain::error::ErrorResponse::ImageWriteError;
 
 #[derive(Debug, Clone)]
 pub enum Dimension {

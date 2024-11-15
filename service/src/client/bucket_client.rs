@@ -4,12 +4,12 @@ use log::info;
 const BUCKET_URL: &str = "https://storage.googleapis.com/image-resizer_europe-west1";
 
 lazy_static! {
-    static ref CLIENT: reqwest::Client = bucket_client();
+    static ref BUCKET_CLIENT: reqwest::Client = bucket_client();
 }
 
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let url = String::from(BUCKET_URL) + path;
-    let resp = CLIENT.get(&url).send().await?;
+    let resp = BUCKET_CLIENT.get(&url).send().await?;
     let bytes = resp.bytes().await.map(|d| { d.to_vec() });
     bytes
 }

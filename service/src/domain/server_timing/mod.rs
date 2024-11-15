@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::server_timing::timing::Timing;
+use crate::domain::server_timing::timing::Timing;
 
 pub mod timing;
 
