@@ -8,7 +8,7 @@ use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
 use image::{DynamicImage, EncodableLayout, ImageFormat};
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 use crate::{CACHE};
 use crate::bucket_client::bucket_request;
 use crate::cache::ImageCacheItem;
@@ -35,49 +35,22 @@ pub struct ImageData {
     content_length: u64,
 }
 
-
-pub async fn process(path: &str) -> InternalResponse {
-    let process_timer: Instant = Instant::now();
-
-    let decoding_timer = Instant::now();
-    let (image, format) = read_image(path).await?;
-    let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
-
-
-    let encoding_timer = Instant::now();
-
-    let mut bytes: Vec<u8> = Vec::new();
-    let mut cursor = Cursor::new(&mut bytes);
-    let _ = image.write_to(&mut cursor, format);
-    let content_length = bytes.len() as u64;
-
-    let format_extension: String = get_format_extension(format);
-    let body: BoxBody<Bytes, hyper::Error> = bytes_to_stream(bytes);
-    let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
-
-
-    let server_timing: ServerTiming = ServerTiming::new([decoding_timing, encoding_timing].to_vec());
-    debug!("Success simple {} ms: {path}", process_timer.elapsed().as_millis());
-    Ok(ImageData {
-        body,
-        server_timing,
-        format_extension,
-        content_length,
-    })
-}
-
 const OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
     cropping: SrcCropping::FitIntoDestination((0.5, 0.5)),
     mul_div_alpha: true,
 };
 
-pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
+pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResponse {
     let process_timer: Instant = Instant::now();
 
     let decoding_timer = Instant::now();
     debug!("Processing query parameters");
-    let dimension: Dimension = decode(query)?;
+    let opt_dimension: Option<Dimension> = match opt_query {
+        Some(query) => decode(query).ok(),
+        None => None,
+    };
+
     debug!("Dimensions parsed");
     let (image, format) = read_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
@@ -86,34 +59,42 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
     let mut resizer: Resizer = Resizer::new();
 
     let resizing_timer = Instant::now();
-    match dimension {
-        Width(new_width) => {
-            let new_height = ((new_width * image.height()) as f64 / image.width() as f64).round() as u32;
-            new_image = DynamicImage::new(
-                new_width,
-                new_height,
-                image.color(),
-            );
-            let _ = resizer.resize(
-                &image,
-                &mut new_image,
-                &OPTS,
-            );
-        }
-        Height(new_height) => {
-            let new_width = ((new_height * image.width()) as f64 / image.height() as f64) as u32;
-            new_image = DynamicImage::new(
-                new_width,
-                new_height,
-                image.color(),
-            );
-            let _ = resizer.resize(
-                &image,
-                &mut new_image,
-                &OPTS,
-            );
-        }
-    };
+
+    match opt_dimension {
+        Some(dimension) => {
+            match dimension {
+                Width(new_width) => {
+                    let new_height = ((new_width * image.height()) as f64 / image.width() as f64).round() as u32;
+                    new_image = DynamicImage::new(
+                        new_width,
+                        new_height,
+                        image.color(),
+                    );
+                    let _ = resizer.resize(
+                        &image,
+                        &mut new_image,
+                        &OPTS,
+                    );
+                }
+                Height(new_height) => {
+                    let new_width = ((new_height * image.width()) as f64 / image.height() as f64) as u32;
+                    new_image = DynamicImage::new(
+                        new_width,
+                        new_height,
+                        image.color(),
+                    );
+                    let _ = resizer.resize(
+                        &image,
+                        &mut new_image,
+                        &OPTS,
+                    );
+                }
+            };
+        },
+        None => { new_image = image; },
+    }
+
+
     let resizing_timing: Timing = Timing::new("res", resizing_timer.elapsed(), None);
 
     debug!("Image resized, writing image to buffer");
@@ -134,7 +115,7 @@ pub async fn process_resize(path: &str, query: &str) -> InternalResponse {
 
     let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
-    debug!("Success resize {} ms: {path}?{query}", process_timer.elapsed().as_millis());
+    debug!("Success {} ms: {path}", process_timer.elapsed().as_millis());
     Ok(ImageData {
         body,
         server_timing,
@@ -156,7 +137,7 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 ImageFormat::Jpeg
             });
 
-            let bytes= bucket_request(path).await.map_err(|_| {
+            let bytes = bucket_request(path).await.map_err(|_| {
                 error!("Could not decode image at {path}");
                 ImageNotFoundError { path: path.to_string() }
             })?;
@@ -173,7 +154,7 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
             tokio::task::spawn(async move { CACHE.write().await.write_image(&new_path, borr); });
 
             new_image_cache_item
-        },
+        }
     };
 
     debug!("Image decoded at {path}");
