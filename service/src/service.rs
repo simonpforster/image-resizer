@@ -1,4 +1,4 @@
-use std::io::{BufReader, Cursor};
+use std::io::{Cursor};
 use std::error;
 use std::time::Instant;
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
@@ -7,7 +7,7 @@ use http_body_util::{BodyExt, Full, StreamBody};
 use http_body_util::combinators::BoxBody;
 use hyper::{Response, StatusCode};
 use hyper::body::{Frame, Bytes};
-use image::{DynamicImage, ImageFormat, ImageReader};
+use image::{DynamicImage, EncodableLayout, ImageFormat};
 use log::{debug, error, info, warn};
 use crate::{CACHE};
 use crate::bucket_client::bucket_request;
@@ -158,9 +158,9 @@ async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResp
                 ImageFormat::Jpeg
             });
 
-            let bytes= bucket_request(&(String::from(PATH) + &path)).await.unwrap();
+            let bytes= bucket_request(path).await.unwrap();
 
-            let image = image::load_from_memory_with_format(bytes, format).map_err(|_| {
+            let image = image::load_from_memory_with_format(bytes.as_bytes(), format).map_err(|_| {
                 error!("Could not decode image at {path}");
                 ImageDecodeError { path: path.to_string() }
             })?;
