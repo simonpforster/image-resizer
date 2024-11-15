@@ -4,7 +4,8 @@ use http_body_util::{BodyExt, combinators::BoxBody, Full};
 use hyper::{Method, Request, Response, StatusCode};
 use hyper::body::Bytes;
 use log::debug;
-use crate::service::{process_resize, transform};
+use crate::response_handler::transform;
+use crate::service::process_resize;
 
 pub async fn router(
     req: Request<hyper::body::Incoming>,

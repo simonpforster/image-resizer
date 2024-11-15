@@ -20,6 +20,8 @@ mod server_timing;
 mod cache;
 mod bucket_client;
 mod logging;
+mod response_handler;
+mod image_service;
 
 lazy_static! {
     static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
