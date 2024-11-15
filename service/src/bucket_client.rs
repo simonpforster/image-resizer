@@ -25,6 +25,7 @@ pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
 fn bucket_client() -> reqwest::Client {
     reqwest::Client::builder()
         .https_only(true)
+        .http3_prior_knowledge()
         .connection_verbose(true)
         .build().unwrap()
 }
