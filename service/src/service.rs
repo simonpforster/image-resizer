@@ -133,16 +133,11 @@ fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
     let mut resizer: Resizer = Resizer::new();
     match dimension {
         Width(new_width) => {
-            let new_height = ((new_width * src_image.height()) as f64 / src_image.width() as f64).round() as u32;
+            let new_height = ((new_width * src_image.height()) as f64 / src_image.width() as f64) as u32;
             dst_image = DynamicImage::new(
                 new_width,
                 new_height,
                 src_image.color(),
-            );
-            let _ = resizer.resize(
-                &src_image,
-                &mut dst_image,
-                &OPTS,
             );
         }
         Height(new_height) => {
@@ -152,13 +147,13 @@ fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
                 new_height,
                 src_image.color(),
             );
-            let _ = resizer.resize(
-                &src_image,
-                &mut dst_image,
-                &OPTS,
-            );
         }
     };
+    let _ = resizer.resize(
+        &src_image,
+        &mut dst_image,
+        &OPTS,
+    );
     dst_image
 }
 
