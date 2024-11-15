@@ -1,3 +1,4 @@
+use std::os::macos::raw::stat;
 use hyper::Version;
 use lazy_static::lazy_static;
 use log::info;
@@ -12,9 +13,14 @@ lazy_static! {
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let http_request_timer = Instant::now();
     let url = String::from(BUCKET_URL) + path;
-    let resp = CLIENT.get(&url).version(Version::HTTP_3).send().await?;
+    info!("sending request");
+    let fut = CLIENT.get(&url).send();
+    info!("sent request");
+    let resp = fut.await?;
+    info!("got response");
     let status = resp.status();
-    let headers  = resp.headers().clone();
+    info!("Code: {}", status);
+    let headers = resp.headers().clone();
     let version = resp.version();
     let bytes = resp.bytes().await.map(|d| { d.to_vec() });
     info!("Code {}:{:?} after {} for {}", status, version, http_request_timer.elapsed().as_millis(), path);
@@ -23,9 +29,9 @@ pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
 }
 
 fn bucket_client() -> reqwest::Client {
+    info!("init client");
     reqwest::Client::builder()
         .https_only(true)
-        .http3_prior_knowledge()
         .use_rustls_tls()
         .connection_verbose(true)
         .build().unwrap()

@@ -11,7 +11,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
 
-ENV RUSTFLAGS="-C target-cpu=haswell -C opt-level=3 -C target-feature=+avx,+avx2,+sse2 --cfg reqwest_unstable"
+ENV RUSTFLAGS="-C target-cpu=haswell -C opt-level=3 -C target-feature=+avx,+avx2,+sse2"
 
 COPY --from=planner /image-resizer/recipe.json recipe.json
 # Build dependencies - this is the caching Docker layer!
@@ -29,7 +29,5 @@ ENV RUST_BACKTRACE=full
 EXPOSE 8080
 
 USER 65534
-
-ENV RUSTFLAGS="--cfg reqwest_unstable"
 
 CMD ["/usr/local/bin/service"]
