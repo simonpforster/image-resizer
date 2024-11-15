@@ -7,13 +7,11 @@ use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
 use log::{info, LevelFilter, SetLoggerError};
 use log4rs::{Config, Handle};
-use log4rs::append::console::{ConsoleAppender, Target};
-use log4rs::config::{Appender, Logger, Root};
-use log4rs::encode::json::{JsonEncoder};
 use tokio::net::TcpListener;
 use tokio::sync::{RwLock};
 use tokio::time;
 use crate::cache::Cache;
+use crate::logging::logger_setup;
 use crate::router::router;
 
 mod service;
@@ -23,6 +21,7 @@ mod dimension;
 mod server_timing;
 mod cache;
 mod bucket_client;
+mod logging;
 
 lazy_static! {
     static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());
@@ -76,19 +75,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 }
 
-fn logger_setup() -> Result<Handle, SetLoggerError> {
-    let level: LevelFilter = LevelFilter::from_str("debug").unwrap();
-
-    let stdout: ConsoleAppender = ConsoleAppender::builder()
-        .target(Target::Stdout)
-        .encoder(Box::new(JsonEncoder::new()))
-        .build();
-
-    let log_conf: log4rs::Config = Config::builder()
-        .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .logger(Logger::builder().build("app::backend::db", level))
-        .build(Root::builder().appender("stdout").build(level))
-        .unwrap();
-
-    log4rs::init_config(log_conf)
-}
