@@ -20,7 +20,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --bin service
 
-FROM rust:1.81.0-bookworm AS runner
+FROM rust:1.81.0-slim-bookworm AS runner
 
 COPY --from=builder --chown=65534 /image-resizer/target/release/service /usr/local/bin
 
