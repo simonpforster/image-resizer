@@ -1,10 +1,10 @@
-use std::time::Instant;
-use image::{DynamicImage, EncodableLayout, ImageFormat};
-use log::{error, warn};
 use crate::client::bucket_client::bucket_request;
 use crate::domain::error::ErrorResponse;
-use crate::domain::error::ErrorResponse::{ImageDecodeError, ImageNotFoundError};
+use crate::domain::error::ErrorResponse::ImageNotFoundError;
 use crate::repository::{ImageItem, ImageRepository};
+use image::ImageFormat;
+use log::{error, warn};
+use std::time::Instant;
 
 pub struct BucketRepository {}
 
@@ -16,16 +16,16 @@ impl ImageRepository for BucketRepository {
             ImageFormat::Jpeg
         });
 
-        let bytes = bucket_request(path).await.map_err(|_| {
+        let bytes: Vec<u8> = bucket_request(path).await.map_err(|_| {
             error!("Could not decode image at {path}");
-            ImageNotFoundError { path: path.to_string() }
+            ImageNotFoundError {
+                path: path.to_string(),
+            }
         })?;
-
-        let image: DynamicImage = image::load_from_memory_with_format(bytes.as_bytes(), format).map_err(|_| {
-            error!("Could not decode image at {path}");
-            ImageDecodeError { path: path.to_string() }
-        })?;
-        Ok(ImageItem { time: Instant::now(), format, image })
+        Ok(ImageItem {
+            time: Instant::now(),
+            format,
+            image: bytes,
+        })
     }
 }
-
