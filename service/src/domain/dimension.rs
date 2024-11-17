@@ -14,7 +14,7 @@ pub fn decode(query: &str) -> Result<Dimension, ErrorResponse> {
         .split('&')
         .collect::<Vec<&str>>()
         .iter()
-        .map(|pair| {
+        .filter_map(|pair| {
             let some: Vec<&str> = pair.split('=').collect();
             match some.len() {
                 2 => {
@@ -24,7 +24,6 @@ pub fn decode(query: &str) -> Result<Dimension, ErrorResponse> {
                 _ => None,
             }
         })
-        .flatten()
         .collect::<HashMap<&str, &str>>();
 
     let opt_width = params.get("width");
