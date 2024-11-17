@@ -1,18 +1,17 @@
-use std::io::{Cursor};
-use std::time::Instant;
-use futures_util::{stream, StreamExt};
-use http_body_util::StreamBody;
-use http_body_util::combinators::BoxBody;
-use hyper::body::{Frame, Bytes};
-use image::{DynamicImage};
-use log::{debug, error};
-use crate::domain::dimension::{decode, Dimension};
-use crate::domain::error::ErrorResponse;
-use crate::domain::error::ErrorResponse::*;
+pub(crate) use crate::domain::dimension::{decode, Dimension};
+pub(crate) use crate::domain::error::ErrorResponse;
+pub(crate) use crate::domain::error::ErrorResponse::*;
+use crate::domain::server_timing::{timing::Timing, ServerTiming};
 use crate::domain::{ExtensionProvider, ImageData};
 use crate::image_service::{read_image, resize_image};
-use crate::domain::server_timing::ServerTiming;
-use crate::domain::server_timing::timing::Timing;
+use futures_util::{stream, StreamExt};
+use http_body_util::combinators::BoxBody;
+use http_body_util::StreamBody;
+use hyper::body::{Bytes, Frame};
+use image::DynamicImage;
+use log::{debug, error};
+use std::io::Cursor;
+use std::time::Instant;
 
 pub type InternalResponse = Result<ImageData, ErrorResponse>;
 
@@ -46,19 +45,22 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
     let mut cursor = Cursor::new(&mut bytes);
     new_image.write_to(&mut cursor, format).map_err(|_| {
         error!("Could not write the image for {path}");
-        ImageWriteError { path: path.to_string() }
+        ImageWriteError {
+            path: path.to_string(),
+        }
     })?;
     debug!("Image was written for {path}");
 
     let format_extension: String = format.get_format_extension();
     let content_length: u64 = bytes.len() as u64;
-    let chunked = stream::iter(bytes).chunks(8192).map(|x| {
-        Ok::<Frame<Bytes>, hyper::Error>(Frame::data(Bytes::from(x)))
-    });
+    let chunked = stream::iter(bytes)
+        .chunks(8192)
+        .map(|x| Ok::<Frame<Bytes>, hyper::Error>(Frame::data(Bytes::from(x))));
     let body: BoxBody<Bytes, hyper::Error> = BoxBody::new(StreamBody::new(chunked));
     let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
 
-    let server_timing: ServerTiming = ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
+    let server_timing: ServerTiming =
+        ServerTiming::new([decoding_timing, resizing_timing, encoding_timing].to_vec());
 
     debug!("Success {} ms: {path}", process_timer.elapsed().as_millis());
     Ok(ImageData {
@@ -68,4 +70,3 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
         content_length,
     })
 }
-

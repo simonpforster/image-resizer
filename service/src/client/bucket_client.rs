@@ -10,8 +10,7 @@ lazy_static! {
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let url = String::from(BUCKET_URL) + path;
     let resp = BUCKET_CLIENT.get(&url).send().await?;
-    let bytes = resp.bytes().await.map(|d| { d.to_vec() });
-    bytes
+    resp.bytes().await.map(|d| d.to_vec())
 }
 
 fn bucket_client() -> reqwest::Client {
@@ -20,5 +19,6 @@ fn bucket_client() -> reqwest::Client {
         .https_only(true)
         .use_rustls_tls()
         .connection_verbose(true)
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
