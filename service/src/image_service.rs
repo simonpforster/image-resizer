@@ -1,11 +1,11 @@
-use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
-use image::{DynamicImage, ImageFormat};
-use log::debug;
-use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
 use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
 use crate::repository::ImageRepository;
+use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
+use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
+use image::{DynamicImage, ImageFormat};
+use log::debug;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -27,7 +27,9 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 
             let new_path: String = path.to_string();
             let cache_image = new_image_cache_item.clone();
-            tokio::task::spawn(async move { CACHE_REPOSITORY.write_image(new_path, cache_image) });
+            tokio::task::spawn(
+                async move { CACHE_REPOSITORY.write_image(new_path, cache_image).await },
+            );
 
             new_image_cache_item
         }
@@ -43,27 +45,16 @@ pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicIma
     let mut resizer: Resizer = Resizer::new();
     match dimension {
         Width(new_width) => {
-            let new_height = ((new_width * src_image.height()) as f64 / src_image.width() as f64) as u32;
-            dst_image = DynamicImage::new(
-                new_width,
-                new_height,
-                src_image.color(),
-            );
+            let new_height =
+                ((new_width * src_image.height()) as f64 / src_image.width() as f64) as u32;
+            dst_image = DynamicImage::new(new_width, new_height, src_image.color());
         }
         Height(new_height) => {
-            let new_width = ((new_height * src_image.width()) as f64 / src_image.height() as f64) as u32;
-            dst_image = DynamicImage::new(
-                new_width,
-                new_height,
-                src_image.color(),
-            );
+            let new_width =
+                ((new_height * src_image.width()) as f64 / src_image.height() as f64) as u32;
+            dst_image = DynamicImage::new(new_width, new_height, src_image.color());
         }
     };
-    let _ = resizer.resize(
-        &src_image,
-        &mut dst_image,
-        &RESIZE_OPTS,
-    );
+    let _ = resizer.resize(&src_image, &mut dst_image, &RESIZE_OPTS);
     dst_image
 }
-
