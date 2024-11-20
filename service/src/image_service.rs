@@ -1,3 +1,4 @@
+use std::time::Instant;
 use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
@@ -6,7 +7,7 @@ use crate::repository::{ImageItem, ImageRepository};
 use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use image::{DynamicImage, EncodableLayout, ImageFormat};
-use log::{debug, error};
+use log::{debug, error, info};
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -36,6 +37,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
         }
     };
 
+    let timer = Instant::now();
     let image: DynamicImage = image::load_from_memory_with_format(
         image_cache_item.image.as_bytes(),
         image_cache_item.format,
@@ -46,6 +48,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
             path: path.to_string(),
         }
     })?;
+    info!("loading image took: {} ms", timer.elapsed().as_millis());
     debug!("Image decoded at {path}");
     Ok((image, image_cache_item.format))
 }
