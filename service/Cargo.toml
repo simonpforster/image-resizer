@@ -6,7 +6,7 @@ default-run = "service"
 authors.workspace = true
 
 [dependencies]
-image = { version = "0.25.4" }
+image = { version = "0.25.4", features = ["rayon"] }
 fast_image_resize = { version = "5.0.0", features = ["image"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = "0.7.12"
