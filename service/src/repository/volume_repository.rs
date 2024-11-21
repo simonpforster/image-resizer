@@ -1,4 +1,4 @@
-use std::fs;
+use std::path::Path;
 use std::time::Instant;
 use image::ImageFormat;
 use log::{error, info, warn};
@@ -12,7 +12,9 @@ const ROOT_PATH: &str = "/mnt/shared-cache/";
 impl VolumeRepository {
     pub async fn write_image(&self, path: &str, cache_item: &ImageItem) -> Result<(), ErrorResponse> {
         let timer = Instant::now();
-        fs::write(ROOT_PATH.to_string() + path, &cache_item.image).map_err(|_| {
+        let d = Path::new(path);
+        let _ = tokio::fs::create_dir_all(d.parent().unwrap()).await;
+        tokio::fs::write(ROOT_PATH.to_string() + path, &cache_item.image).await.map_err(|_| {
             error!("Could not write image at {path}");
             ImageWriteError {
                 path: path.to_string(),
@@ -31,12 +33,13 @@ impl ImageRepository for VolumeRepository {
             ImageFormat::Jpeg
         });
 
-        let bytes = fs::read(ROOT_PATH.to_string() + path).map_err(|_| {
+        let bytes = tokio::fs::read(ROOT_PATH.to_string() + path).await.map_err(|_| {
             error!("Could not decode image at {path}");
             ImageNotFoundError {
                 path: path.to_string(),
             }
         })?;
+
         info!("FS read took {} ms for {}", timer.elapsed().as_millis(), path);
         Ok(ImageItem {
             time: Instant::now(),
