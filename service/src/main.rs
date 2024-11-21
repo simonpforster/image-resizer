@@ -8,6 +8,7 @@ use tokio::net::TcpListener;
 use crate::logging::logger_setup;
 use crate::repository::bucket_repository::BucketRepository;
 use crate::repository::cache_repository::CacheRepository;
+use crate::repository::volume_repository::VolumeRepository;
 use crate::router::router;
 
 mod service;
@@ -21,6 +22,7 @@ mod domain;
 
 lazy_static! {
     static ref CACHE_REPOSITORY: CacheRepository = CacheRepository {};
+    static ref VOLUME_REPOSITORY: VolumeRepository = VolumeRepository {};
     static ref BUCKET_REPOSITORY: BucketRepository = BucketRepository {};
 }
 
