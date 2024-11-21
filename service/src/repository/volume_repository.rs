@@ -42,7 +42,7 @@ impl ImageRepository for VolumeRepository {
 
         let full_path = ROOT_PATH.to_string() + path;
         let bytes = tokio::fs::read(full_path).await.map_err(|_| {
-            error!("FS could not decode image at {path}");
+            error!("FS could not decode image at {full_path}");
             ImageNotFoundError {
                 path: path.to_string(),
             }
