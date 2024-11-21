@@ -21,7 +21,8 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     1. Memory Cache
 ///     2. Bucket (HTTP/2)
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-    let image_cache_item: ImageItem = match CACHE_REPOSITORY.read_image(path).await.ok() {
+    // let image_cache_item: ImageItem = match CACHE_REPOSITORY.read_image(path).await.ok() {
+    let image_cache_item: ImageItem = match None {
         Some(item) => item,
         None => {
             let volume_item = match VOLUME_REPOSITORY.read_image(path).await.ok() {

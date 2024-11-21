@@ -7,7 +7,7 @@ use crate::service::{ErrorResponse, ImageNotFoundError, ImageWriteError};
 
 pub struct VolumeRepository {}
 
-const ROOT_PATH: &str = "/mnt/shared-cache/";
+const ROOT_PATH: &str = "/mnt/shared-cache";
 
 impl VolumeRepository {
     pub async fn write_image(&self, path: &str, cache_item: &ImageItem) -> Result<(), ErrorResponse> {
@@ -43,7 +43,7 @@ impl ImageRepository for VolumeRepository {
         });
 
         let bytes = tokio::fs::read(&full_path).await.map_err(|_| {
-            error!("FS could not decode image at {full_path}");
+            error!("FS could not read image at {full_path}");
             ImageNotFoundError {
                 path: path.to_string(),
             }
