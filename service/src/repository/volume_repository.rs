@@ -1,7 +1,11 @@
+use std::io::Read;
 use std::path::Path;
 use std::time::Instant;
+use futures_util::TryFutureExt;
+use http_body_util::BodyExt;
 use image::ImageFormat;
 use log::{error, info, warn};
+use tokio::io::{AsyncReadExt, BufReader};
 use crate::repository::{ImageItem, ImageRepository};
 use crate::service::{ErrorResponse, ImageNotFoundError, ImageWriteError};
 
@@ -42,12 +46,15 @@ impl ImageRepository for VolumeRepository {
             ImageFormat::Jpeg
         });
 
-        let bytes = tokio::fs::read(&full_path).await.map_err(|_| {
+        let file = tokio::fs::File::open(&full_path).map_err(|_| {
             error!("FS could not read image at {full_path}");
             ImageNotFoundError {
                 path: path.to_string(),
             }
         })?;
+
+        let mut reader = BufReader::new(file);
+        let bytes: Vec<u8> = reader.collect();
 
         info!("FS read took {} ms for {}", timer.elapsed().as_millis(), path);
         Ok(ImageItem {
