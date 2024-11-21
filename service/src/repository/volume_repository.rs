@@ -12,7 +12,7 @@ const ROOT_PATH: &str = "/mnt/shared-cache/";
 impl VolumeRepository {
     pub async fn write_image(&self, path: &str, cache_item: &ImageItem) -> Result<(), ErrorResponse> {
         let timer = Instant::now();
-        let d = Path::new(path);
+        let d = Path::new(&(ROOT_PATH.to_string() + path));
         let _ = tokio::fs::create_dir_all(d.parent().unwrap()).await.map_err(|_| {
             error!("Could not create dirs to image at {path}");
             ImageWriteError {
