@@ -6,7 +6,7 @@ use log::{error, info, warn};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, BufReader};
 use crate::repository::{ImageItem, ImageRepository};
-use crate::service::{ErrorResponse, ImageNotFoundError, ImageWriteError};
+use crate::service::{ErrorResponse, ImageDecodeError, ImageNotFoundError, ImageWriteError};
 
 pub struct VolumeRepository {}
 
@@ -54,7 +54,12 @@ impl ImageRepository for VolumeRepository {
 
         let mut reader = BufReader::new(file);
         let mut bytes: Vec<u8> = Vec::new();
-        let _ = reader.read_to_end(&mut bytes).await.unwrap();
+        let _ = reader.read_to_end(&mut bytes).map_err(|_| {
+            error!("FS could not read byte buffer at {full_path}");
+            ImageDecodeError {
+                path: path.to_string(),
+            }
+        }).await?;
 
         info!("FS read took {} ms for {}", timer.elapsed().as_millis(), path);
         Ok(ImageItem {
