@@ -3,7 +3,7 @@ use std::time::Instant;
 use futures_util::TryFutureExt;
 use image::ImageFormat;
 use log::{error, info, warn};
-use tokio::fs::File;
+use std::fs::File;
 use tokio::io::{AsyncReadExt, BufReader};
 use crate::repository::{ImageItem, ImageRepository};
 use crate::service::{ErrorResponse, ImageDecodeError, ImageNotFoundError, ImageWriteError};
