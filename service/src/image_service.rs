@@ -41,12 +41,15 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
     let timer = Instant::now();
     let cursor = Cursor::new(image_cache_item.image.as_bytes());
     let mut reader = BufReader::new(cursor);
-    let image: DynamicImage = ImageReader::with_format(&mut reader, image_cache_item.format).decode().map_err(|_| {
-        error!("Could not decode image at {path}");
-        ImageDecodeError {
-            path: path.to_string(),
-        }
+    let image: DynamicImage = tokio::task::block_in_place(move || {
+        ImageReader::with_format(&mut reader, image_cache_item.format).decode().map_err(|_| {
+            error!("Could not decode image at {path}");
+            ImageDecodeError {
+                path: path.to_string(),
+            }
+        })
     })?;
+
     info!("loading image took: {} ms for {}", timer.elapsed().as_millis(), path);
     debug!("Image decoded at {path}");
     Ok((image, image_cache_item.format))
