@@ -1,4 +1,4 @@
-use std::io::{Cursor};
+use std::io::{BufReader, Cursor};
 use std::time::Instant;
 use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
@@ -40,7 +40,8 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 
     let timer = Instant::now();
     let cursor = Cursor::new(image_cache_item.image.as_bytes());
-    let image: DynamicImage = ImageReader::with_format(cursor, image_cache_item.format).decode().map_err(|_| {
+    let mut reader = BufReader::new(cursor);
+    let image: DynamicImage = ImageReader::with_format(&mut reader, image_cache_item.format).decode().map_err(|_| {
         error!("Could not decode image at {path}");
         ImageDecodeError {
             path: path.to_string(),
