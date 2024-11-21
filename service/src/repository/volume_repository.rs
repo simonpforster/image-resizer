@@ -16,13 +16,13 @@ impl VolumeRepository {
         let parent = Path::new(&full_path).parent().unwrap();
 
         let _ = tokio::fs::create_dir_all(parent).await.map_err(|_| {
-            error!("Could not create dirs to image at {path}");
+            error!("Could not create dirs to image at {full_path}");
             ImageWriteError {
                 path: path.to_string(),
             }
         })?;
         tokio::fs::write(&full_path, &cache_item.image).await.map_err(|_| {
-            error!("Could not write image at {path}");
+            error!("Could not write image at {full_path}");
             ImageWriteError {
                 path: path.to_string(),
             }
@@ -35,12 +35,13 @@ impl VolumeRepository {
 impl ImageRepository for VolumeRepository {
     async fn read_image(&self, path: &str) -> Result<ImageItem, ErrorResponse> {
         let timer = Instant::now();
+        let full_path = ROOT_PATH.to_string() + path;
+
         let format: ImageFormat = ImageFormat::from_path(path).unwrap_or_else(|_| {
-            warn!("Defaulting to Jpeg format for {path}");
+            warn!("Defaulting to Jpeg format for {full_path}");
             ImageFormat::Jpeg
         });
 
-        let full_path = ROOT_PATH.to_string() + path;
         let bytes = tokio::fs::read(full_path).await.map_err(|_| {
             error!("FS could not decode image at {full_path}");
             ImageNotFoundError {
