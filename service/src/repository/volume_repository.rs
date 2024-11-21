@@ -3,7 +3,6 @@ use std::time::Instant;
 use image::ImageFormat;
 use log::{error, info, warn};
 use crate::repository::{ImageItem, ImageRepository};
-use crate::router::full;
 use crate::service::{ErrorResponse, ImageNotFoundError, ImageWriteError};
 
 pub struct VolumeRepository {}
@@ -36,13 +35,13 @@ impl VolumeRepository {
 impl ImageRepository for VolumeRepository {
     async fn read_image(&self, path: &str) -> Result<ImageItem, ErrorResponse> {
         let timer = Instant::now();
-        let full_path = ROOT_PATH.to_string() + path;
-        let format: ImageFormat = ImageFormat::from_path(full_path).unwrap_or_else(|_| {
+        let format: ImageFormat = ImageFormat::from_path(path).unwrap_or_else(|_| {
             warn!("Defaulting to Jpeg format for {path}");
             ImageFormat::Jpeg
         });
 
-        let bytes = tokio::fs::read(ROOT_PATH.to_string() + path).await.map_err(|_| {
+        let full_path = ROOT_PATH.to_string() + path;
+        let bytes = tokio::fs::read(full_path).await.map_err(|_| {
             error!("FS could not decode image at {path}");
             ImageNotFoundError {
                 path: path.to_string(),
