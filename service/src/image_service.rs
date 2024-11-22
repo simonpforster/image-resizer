@@ -1,12 +1,12 @@
 use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
-use crate::domain::error::ErrorResponse::ImageDecodeError;
 use crate::repository::{ImageItem, ImageRepository};
 use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
-use image::{DynamicImage, EncodableLayout, ImageFormat};
-use log::{debug, error};
+use image::{DynamicImage, ImageFormat};
+use log::{debug};
+use crate::domain::format_from_path;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -35,19 +35,8 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
             new_image_cache_item
         }
     };
-
-    let image: DynamicImage = image::load_from_memory_with_format(
-        image_cache_item.image.as_bytes(),
-        image_cache_item.format,
-    )
-    .map_err(|_| {
-        error!("Could not decode image at {path}");
-        ImageDecodeError {
-            path: path.to_string(),
-        }
-    })?;
     debug!("Image decoded at {path}");
-    Ok((image, image_cache_item.format))
+    Ok((image_cache_item.image, format_from_path(&path)))
 }
 
 /// Resize an image based on a provided `Dimension`.
