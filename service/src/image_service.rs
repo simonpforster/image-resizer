@@ -22,32 +22,18 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     1. Memory Cache
 ///     2. Bucket (HTTP/2)
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-    let image_cache_item: ImageItem = match CACHE_REPOSITORY.read_image(path).await.ok() {
-    // let image_cache_item: ImageItem = match None {
+    let image_cache_item: ImageItem = match VOLUME_REPOSITORY.read_image(path).await.ok() {
         Some(item) => item,
         None => {
-            let volume_item = match VOLUME_REPOSITORY.read_image(path).await.ok() {
-                Some(item) => item,
-                None => {
-                    let bucket_item = BUCKET_REPOSITORY.read_image(path).await?;
-
-                    let new_path: String = path.to_string();
-                    let cache_item = bucket_item.clone();
-                    tokio::task::spawn(
-                        async move { VOLUME_REPOSITORY.write_image(&new_path, &cache_item).await },
-                    );
-
-                    bucket_item
-                }
-            };
+            let bucket_item = BUCKET_REPOSITORY.read_image(path).await?;
 
             let new_path: String = path.to_string();
-            let cache_image = volume_item.clone();
+            let cache_item = bucket_item.clone();
             tokio::task::spawn(
-                async move { CACHE_REPOSITORY.write_image(new_path, cache_image).await },
+                async move { VOLUME_REPOSITORY.write_image(&new_path, &cache_item).await },
             );
 
-            volume_item
+            bucket_item
         }
     };
 

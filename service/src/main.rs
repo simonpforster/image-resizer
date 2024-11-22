@@ -43,9 +43,6 @@ where
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = logger_setup();
 
-    // Cache culler task
-    tokio::task::spawn(CACHE_REPOSITORY.cull_images_loop());
-
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
     info!("Attempting to start server at {addr}");
