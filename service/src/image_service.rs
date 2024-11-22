@@ -26,11 +26,11 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
         None => {
             let new_image_cache_item = BUCKET_REPOSITORY.read_image(path).await?;
 
-            let new_path: String = path.to_string();
-            let cache_image = new_image_cache_item.clone();
-            tokio::task::spawn(
-                async move { CACHE_REPOSITORY.write_image(new_path, cache_image).await },
-            );
+            // let new_path: String = path.to_string();
+            // // let cache_image = new_image_cache_item.clone();
+            // // tokio::task::spawn(
+            // //     async move { CACHE_REPOSITORY.write_image(new_path, cache_image).await },
+            // // );
 
             new_image_cache_item
         }
