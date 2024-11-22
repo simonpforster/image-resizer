@@ -2,6 +2,7 @@ use crate::domain::server_timing::ServerTiming;
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use image::ImageFormat;
+use log::warn;
 
 pub mod dimension;
 pub mod error;
@@ -12,6 +13,13 @@ pub struct ImageData {
     pub server_timing: ServerTiming,
     pub format_extension: String,
     pub content_length: u64,
+}
+
+pub fn format_from_path(path: &str) -> ImageFormat {
+    ImageFormat::from_path(path).unwrap_or_else(|_| {
+        warn!("Defaulting to Jpeg format for {path}");
+        ImageFormat::Jpeg
+    })
 }
 
 pub trait ExtensionProvider {

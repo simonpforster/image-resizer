@@ -1,8 +1,8 @@
 use std::path::Path;
 use std::time::Instant;
 use futures_util::TryFutureExt;
-use image::ImageFormat;
-use log::{error, info, warn};
+use image::{EncodableLayout};
+use log::{error, info};
 use crate::repository::{ImageItem, ImageRepository};
 use crate::service::{ErrorResponse, ImageNotFoundError, ImageWriteError};
 
@@ -22,7 +22,7 @@ impl VolumeRepository {
                 path: path.to_string(),
             }
         })?;
-        tokio::fs::write(&full_path, &cache_item.image).await.map_err(|_| {
+        tokio::fs::write(&full_path, cache_item.image.as_bytes()).await.map_err(|_| {
             error!("Could not write image at {full_path}");
             ImageWriteError {
                 path: path.to_string(),
@@ -38,11 +38,6 @@ impl ImageRepository for VolumeRepository {
         let timer = Instant::now();
         let full_path = ROOT_PATH.to_string() + path;
 
-        let format: ImageFormat = ImageFormat::from_path(path).unwrap_or_else(|_| {
-            warn!("Defaulting to Jpeg format for {full_path}");
-            ImageFormat::Jpeg
-        });
-
         let bytes: Vec<u8> = tokio::fs::read(&full_path).map_err(|_| {
             error!("FS could not read image at {full_path}");
             ImageNotFoundError {
@@ -53,7 +48,6 @@ impl ImageRepository for VolumeRepository {
         info!("FS read took {} ms for {}", timer.elapsed().as_millis(), path);
         Ok(ImageItem {
             time: Instant::now(),
-            format,
             image: bytes,
         })
     }

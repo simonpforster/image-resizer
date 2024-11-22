@@ -9,6 +9,7 @@ use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY, VOLUME_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use image::{DynamicImage, EncodableLayout, ImageFormat, ImageReader};
 use log::{debug, error, info};
+use crate::domain::format_from_path;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -53,7 +54,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
     let timer = Instant::now();
     let cursor = Cursor::new(image_cache_item.image.as_bytes());
     let mut reader = BufReader::new(cursor);
-    let image: DynamicImage = ImageReader::with_format(&mut reader, image_cache_item.format).decode().map_err(|_| {
+    let image: DynamicImage = ImageReader::with_format(&mut reader, format_from_path(&path)).decode().map_err(|_| {
         error!("Could not decode image at {path}");
         ImageDecodeError {
             path: path.to_string(),
@@ -62,7 +63,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 
     info!("loading image took: {} ms for {}", timer.elapsed().as_millis(), path);
     debug!("Image decoded at {path}");
-    Ok((image, image_cache_item.format))
+    Ok((image, format_from_path(&path)))
 }
 
 /// Resize an image based on a provided `Dimension`.
