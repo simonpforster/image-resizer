@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use log::info;
+use tracing::info;
 
 const BUCKET_URL: &str = "https://storage.googleapis.com/image-resizer_europe-west1";
 

@@ -2,8 +2,8 @@ use crate::client::bucket_client::bucket_request;
 use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageNotFoundError;
 use crate::repository::{ImageItem, ImageRepository};
-use log::{error};
 use std::time::Instant;
+use tracing::error;
 
 pub struct BucketRepository {}
 

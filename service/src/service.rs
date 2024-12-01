@@ -9,12 +9,14 @@ use http_body_util::combinators::BoxBody;
 use http_body_util::StreamBody;
 use hyper::body::{Bytes, Frame};
 use image::DynamicImage;
-use log::{debug, error};
 use std::io::Cursor;
 use std::time::Instant;
+use tracing::instrument;
+use tracing::{debug, error};
 
 pub type InternalResponse = Result<ImageData, ErrorResponse>;
 
+#[instrument]
 pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResponse {
     let process_timer: Instant = Instant::now();
 

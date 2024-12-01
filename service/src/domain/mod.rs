@@ -2,12 +2,13 @@ use crate::domain::server_timing::ServerTiming;
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use image::ImageFormat;
-use log::warn;
+use tracing::warn;
 
 pub mod dimension;
 pub mod error;
 pub mod server_timing;
 
+#[derive(Debug)]
 pub struct ImageData {
     pub body: BoxBody<Bytes, hyper::Error>,
     pub server_timing: ServerTiming,

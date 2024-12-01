@@ -1,24 +1,24 @@
-use std::net::SocketAddr;
-use hyper::server::conn::http2;
-use hyper::service::service_fn;
-use hyper_util::rt::TokioIo;
-use lazy_static::lazy_static;
-use log::info;
-use tokio::net::TcpListener;
 use crate::logging::logger_setup;
 use crate::repository::bucket_repository::BucketRepository;
 use crate::repository::cache_repository::CacheRepository;
 use crate::repository::volume_repository::VolumeRepository;
 use crate::router::router;
+use hyper::server::conn::http2;
+use hyper::service::service_fn;
+use hyper_util::rt::TokioIo;
+use lazy_static::lazy_static;
+use std::net::SocketAddr;
+use tokio::net::TcpListener;
+use tracing::info;
 
-mod service;
-mod router;
-mod logging;
-mod response_handler;
-mod image_service;
 mod client;
-mod repository;
 mod domain;
+mod image_service;
+mod logging;
+mod repository;
+mod response_handler;
+mod router;
+mod service;
 
 lazy_static! {
     static ref CACHE_REPOSITORY: CacheRepository = CacheRepository {};
@@ -64,4 +64,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         });
     }
 }
-

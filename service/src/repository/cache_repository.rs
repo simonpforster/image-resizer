@@ -2,11 +2,11 @@ use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageNotFoundInCacheError;
 use crate::repository::{ImageItem, ImageRepository};
 use lazy_static::lazy_static;
-use log::{debug, info};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tokio::time;
+use tracing::{debug, info};
 
 lazy_static! {
     static ref CACHE: RwLock<Cache> = RwLock::new(Cache::default());

@@ -1,15 +1,15 @@
-use std::io::{BufReader, Cursor};
-use std::time::Instant;
 use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageDecodeError;
+use crate::domain::format_from_path;
 use crate::repository::{ImageItem, ImageRepository};
-use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY, VOLUME_REPOSITORY};
+use crate::{BUCKET_REPOSITORY, VOLUME_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use image::{DynamicImage, EncodableLayout, ImageFormat, ImageReader};
-use log::{debug, error, info};
-use crate::domain::format_from_path;
+use std::io::{BufReader, Cursor};
+use std::time::Instant;
+use tracing::{debug, error, info};
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -29,9 +29,9 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 
             let new_path: String = path.to_string();
             let cache_item = bucket_item.clone();
-            tokio::task::spawn(
-                async move { VOLUME_REPOSITORY.write_image(&new_path, &cache_item).await },
-            );
+            tokio::task::spawn(async move {
+                VOLUME_REPOSITORY.write_image(&new_path, &cache_item).await
+            });
 
             bucket_item
         }
@@ -40,14 +40,20 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
     let timer = Instant::now();
     let cursor = Cursor::new(image_cache_item.image.as_bytes());
     let mut reader = BufReader::new(cursor);
-    let image: DynamicImage = ImageReader::with_format(&mut reader, format_from_path(&path)).decode().map_err(|_| {
-        error!("Could not decode image at {path}");
-        ImageDecodeError {
-            path: path.to_string(),
-        }
-    })?;
+    let image: DynamicImage = ImageReader::with_format(&mut reader, format_from_path(&path))
+        .decode()
+        .map_err(|_| {
+            error!("Could not decode image at {path}");
+            ImageDecodeError {
+                path: path.to_string(),
+            }
+        })?;
 
-    info!("loading image took: {} ms for {}", timer.elapsed().as_millis(), path);
+    info!(
+        "loading image took: {} ms for {}",
+        timer.elapsed().as_millis(),
+        path
+    );
     debug!("Image decoded at {path}");
     Ok((image, format_from_path(&path)))
 }
