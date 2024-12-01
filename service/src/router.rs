@@ -12,7 +12,7 @@ pub async fn router(
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>> {
     let request_id = req
         .headers()
-        .get("X-Cloud-Trace-Context")
+        .get("traceparent")
         .map(|d| d.to_str().unwrap_or("none"))
         .unwrap_or("none");
     debug!("request_id: {}", request_id);
