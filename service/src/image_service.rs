@@ -3,10 +3,10 @@ use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageDecodeError;
 use crate::domain::format_from_path;
-use crate::repository::{ImageItem, ImageRepository};
+use crate::repository::ImageRepository;
 use crate::{BUCKET_REPOSITORY, VOLUME_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
-use image::{DynamicImage, EncodableLayout, ImageFormat, ImageReader};
+use image::{DynamicImage, ImageFormat, ImageReader};
 use std::io::{BufReader, Cursor};
 use std::time::Instant;
 use tracing::{debug, error, info, instrument};
@@ -23,7 +23,7 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     2. Bucket (HTTP/2)
 #[instrument]
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-    let image_cache_item: ImageItem = match VOLUME_REPOSITORY.read_image(path).await.ok() {
+    let image_cache_item: Vec<u8> = match VOLUME_REPOSITORY.read_image(path).await.ok() {
         Some(item) => item,
         None => {
             let bucket_item = BUCKET_REPOSITORY.read_image(path).await?;
@@ -39,7 +39,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
     };
 
     let timer = Instant::now();
-    let cursor = Cursor::new(image_cache_item.image.as_bytes());
+    let cursor = Cursor::new(image_cache_item);
     let mut reader = BufReader::new(cursor);
     let image: DynamicImage = ImageReader::with_format(&mut reader, format_from_path(&path))
         .decode()

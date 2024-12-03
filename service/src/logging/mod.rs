@@ -1,7 +1,6 @@
-use std::str::FromStr;
 use tracing::level_filters::LevelFilter;
-use tracing_subscriber::EnvFilter;
 use tracing_subscriber::filter::ParseError;
+use tracing_subscriber::EnvFilter;
 
 pub fn init_tracing() -> Result<(), ParseError>{
     let env_filter =

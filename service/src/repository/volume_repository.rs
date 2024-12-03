@@ -1,20 +1,21 @@
-use crate::repository::{ImageItem, ImageRepository};
-use crate::service::{ErrorResponse, ImageNotFoundError, ImageWriteError};
+use crate::repository::ImageRepository;
+use crate::service::{ErrorResponse, ImageNotFoundInCacheError, ImageWriteError};
 use futures_util::TryFutureExt;
-use image::EncodableLayout;
 use std::path::Path;
 use std::time::Instant;
-use tracing::{error, info};
+use tracing::{error, info, instrument};
 
+#[derive(Debug)]
 pub struct VolumeRepository {}
 
 const ROOT_PATH: &str = "/mnt/shared-cache";
 
 impl VolumeRepository {
+    #[instrument(skip(cache_item))]
     pub async fn write_image(
         &self,
         path: &str,
-        cache_item: &ImageItem,
+        cache_item: &[u8],
     ) -> Result<(), ErrorResponse> {
         let timer = Instant::now();
         let full_path = ROOT_PATH.to_string() + path;
@@ -26,7 +27,7 @@ impl VolumeRepository {
                 path: path.to_string(),
             }
         })?;
-        tokio::fs::write(&full_path, cache_item.image.as_bytes())
+        tokio::fs::write(&full_path, cache_item)
             .await
             .map_err(|_| {
                 error!("Could not write image at {full_path}");
@@ -44,14 +45,15 @@ impl VolumeRepository {
 }
 
 impl ImageRepository for VolumeRepository {
-    async fn read_image(&self, path: &str) -> Result<ImageItem, ErrorResponse> {
+    #[instrument]
+    async fn read_image(&self, path: &str) -> Result<Vec<u8>, ErrorResponse> {
         let timer = Instant::now();
         let full_path = ROOT_PATH.to_string() + path;
 
         let bytes: Vec<u8> = tokio::fs::read(&full_path)
             .map_err(|_| {
                 error!("FS could not read image at {full_path}");
-                ImageNotFoundError {
+                ImageNotFoundInCacheError {
                     path: path.to_string(),
                 }
             })
@@ -62,9 +64,6 @@ impl ImageRepository for VolumeRepository {
             timer.elapsed().as_millis(),
             path
         );
-        Ok(ImageItem {
-            time: Instant::now(),
-            image: bytes,
-        })
+        Ok(bytes)
     }
 }

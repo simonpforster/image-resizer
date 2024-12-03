@@ -1,16 +1,14 @@
 use crate::repository::bucket_repository::BucketRepository;
-use crate::repository::cache_repository::CacheRepository;
 use crate::repository::volume_repository::VolumeRepository;
 use crate::router::router;
-use hyper::server::conn::http2;
+use hyper::server::conn::{http1, http2};
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
 use std::net::SocketAddr;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tokio::net::TcpListener;
 use tracing::info;
-use tracing_subscriber::EnvFilter;
-use tracing_subscriber::filter::LevelFilter;
 use crate::logging::init_tracing;
 
 mod client;
@@ -23,7 +21,6 @@ mod router;
 mod service;
 
 lazy_static! {
-    static ref CACHE_REPOSITORY: CacheRepository = CacheRepository {};
     static ref VOLUME_REPOSITORY: VolumeRepository = VolumeRepository {};
     static ref BUCKET_REPOSITORY: BucketRepository = BucketRepository {};
 }
@@ -45,6 +42,8 @@ where
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = init_tracing();
 
+    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
+
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
     info!("Attempting to start server at {addr}");
@@ -57,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let io = TokioIo::new(stream);
 
         tokio::task::spawn(async move {
-            if let Err(err) = http2::Builder::new(TokioExecutor)
+            if let Err(err) = http1::Builder::new()//http2::Builder::new(TokioExecutor)
                 .serve_connection(io, service_fn(router))
                 .await
             {
