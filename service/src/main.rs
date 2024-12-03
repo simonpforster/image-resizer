@@ -7,6 +7,7 @@ use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
 use std::net::SocketAddr;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
+use rustls::crypto::CryptoProvider;
 use tokio::net::TcpListener;
 use tracing::info;
 use crate::logging::init_tracing;
@@ -40,6 +41,9 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    let _ = rustls::crypto::ring::default_provider().install_default().unwrap();
+
     let _ = init_tracing().await;
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));

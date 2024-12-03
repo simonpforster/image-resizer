@@ -11,9 +11,6 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{EnvFilter, Registry};
 
 pub async fn init_tracing() -> Result<(), ParseError> {
-    let provider = TracerProvider::builder()
-        .with_span_processor(CustomSpanProcessor::new())
-        .build();
 
     let authorizer = opentelemetry_stackdriver::GcpAuthorizer::new()
         .await
