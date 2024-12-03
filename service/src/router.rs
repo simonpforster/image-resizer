@@ -7,7 +7,7 @@ use hyper::body::Bytes;
 use hyper::{HeaderMap, Method, Request, Response, StatusCode};
 use opentelemetry::Context;
 use opentelemetry::propagation::{Extractor, Injector};
-use tracing::{info, instrument};
+use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 struct HyperHeaderExtractor<'a>(&'a HeaderMap);

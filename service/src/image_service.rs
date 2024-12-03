@@ -27,13 +27,7 @@ pub async fn get_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorR
         Some(item) => item,
         None => {
             let bucket_item = BUCKET_REPOSITORY.read_image(path).await?;
-
-            let new_path: String = path.to_string();
-            let cache_item = bucket_item.clone();
-            let _ = tokio::task::spawn(async move {
-                VOLUME_REPOSITORY.write_image(&new_path, &cache_item).await
-            }).in_current_span();
-
+            VOLUME_REPOSITORY.write_image(&path, &bucket_item).await?;
             bucket_item
         }
     };
