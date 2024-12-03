@@ -47,23 +47,16 @@ impl VolumeRepository {
 impl ImageRepository for VolumeRepository {
     #[instrument]
     async fn read_image(&self, path: &str) -> Result<Vec<u8>, ErrorResponse> {
-        let timer = Instant::now();
         let full_path = ROOT_PATH.to_string() + path;
 
         let bytes: Vec<u8> = tokio::fs::read(&full_path)
             .map_err(|_| {
-                error!("FS could not read image at {full_path}");
+                info!("FS could not read image at {full_path}");
                 ImageNotFoundInCacheError {
                     path: path.to_string(),
                 }
             })
             .await?;
-
-        info!(
-            "FS read took {} ms for {}",
-            timer.elapsed().as_millis(),
-            path
-        );
         Ok(bytes)
     }
 }

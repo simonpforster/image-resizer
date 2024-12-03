@@ -15,6 +15,7 @@ use futures_util::{stream, StreamExt};
 use hyper::body::{Bytes, Frame};
 use http_body_util::combinators::{BoxBody};
 use http_body_util::StreamBody;
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::service::ImageWriteError;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
@@ -60,7 +61,7 @@ pub async fn get_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorR
 }
 
 /// Resize an image based on a provided `Dimension`.
-#[instrument]
+#[instrument(skip(src_image))]
 pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
     let mut dst_image: DynamicImage;
     let mut resizer: Resizer = Resizer::new();
@@ -80,7 +81,8 @@ pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicIma
     dst_image
 }
 
-#[instrument]
+/// Take a dynamic image and write it as `Bytes`.
+#[instrument(skip(image))]
 pub fn image_to_body(image: DynamicImage, format: ImageFormat, path: &str) -> Result<(BoxBody<Bytes, hyper::Error>, u64), ErrorResponse> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
