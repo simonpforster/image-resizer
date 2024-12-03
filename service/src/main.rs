@@ -1,7 +1,7 @@
 use crate::repository::bucket_repository::BucketRepository;
 use crate::repository::volume_repository::VolumeRepository;
 use crate::router::router;
-use hyper::server::conn::{http1, http2};
+use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let io = TokioIo::new(stream);
 
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()//http2::Builder::new(TokioExecutor)
+            if let Err(err) = http2::Builder::new(TokioExecutor)
                 .serve_connection(io, service_fn(router))
                 .await
             {
