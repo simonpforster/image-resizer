@@ -11,9 +11,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::{EnvFilter, Registry};
 
 pub async fn init_tracing() -> Result<(), ParseError> {
-    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     let provider = TracerProvider::builder()
-        .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
         .with_span_processor(CustomSpanProcessor::new())
         .build();
 
@@ -46,6 +44,9 @@ pub async fn init_tracing() -> Result<(), ParseError> {
         .with(EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).from_env_lossy())
         .with(otel_layer)
         .with(stackdriver_layer);
+
+    opentelemetry::global::set_tracer_provider(provider);
+    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
     tracing::subscriber::set_global_default(subscriber).expect("No subscriber set!!!");
     Ok(())
 }
