@@ -42,8 +42,6 @@ where
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _ = init_tracing();
 
-    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
-
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
     info!("Attempting to start server at {addr}");

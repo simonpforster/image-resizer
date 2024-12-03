@@ -1471,6 +1471,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry-stdout"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc8a298402aa5c260be90d10dc54b5a7d4e1025c354848f8e2c976d761351049"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "futures-util",
+ "opentelemetry 0.27.1",
+ "opentelemetry_sdk 0.27.1",
+ "ordered-float",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "opentelemetry_sdk"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2124,6 +2141,7 @@ dependencies = [
  "image",
  "lazy_static",
  "opentelemetry 0.27.1",
+ "opentelemetry-stdout",
  "opentelemetry_sdk 0.27.1",
  "reqwest",
  "rustls",
@@ -2132,6 +2150,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+ "tracing-opentelemetry 0.28.0",
  "tracing-stackdriver",
  "tracing-subscriber",
 ]
@@ -2575,6 +2594,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-opentelemetry"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97a971f6058498b5c0f1affa23e7ea202057a7301dbff68e968b2d578bcbd053"
+dependencies = [
+ "js-sys",
+ "once_cell",
+ "opentelemetry 0.27.1",
+ "opentelemetry_sdk 0.27.1",
+ "smallvec",
+ "tracing",
+ "tracing-core",
+ "tracing-log",
+ "tracing-subscriber",
+ "web-time",
+]
+
+[[package]]
 name = "tracing-serde"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2597,7 +2634,7 @@ dependencies = [
  "thiserror",
  "time",
  "tracing-core",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.23.0",
  "tracing-subscriber",
 ]
 

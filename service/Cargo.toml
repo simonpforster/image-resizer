@@ -27,4 +27,5 @@ tracing-subscriber = { version = "0.3.19", features = ["fmt", "env-filter", "jso
 tracing-stackdriver = { version = "0.10.0", features = ["opentelemetry"] }
 opentelemetry = "0.27.1"
 opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio"] }
-
+tracing-opentelemetry = "0.28.0"
+opentelemetry-stdout = "0.27.0"

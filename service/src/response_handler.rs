@@ -16,7 +16,7 @@ pub type ResultResponse =
     Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>>;
 
 #[instrument]
-pub fn transform(response: InternalResponse) -> ResultResponse {
+pub fn transform(response: InternalResponse, ) -> ResultResponse {
     match response {
         Ok(ImageData {
             body,

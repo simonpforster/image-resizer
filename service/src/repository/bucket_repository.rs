@@ -4,6 +4,7 @@ use crate::domain::error::ErrorResponse::ImageNotFoundError;
 use crate::repository::ImageRepository;
 use tracing::{error, instrument};
 
+#[derive(Debug)]
 pub struct BucketRepository {}
 
 impl ImageRepository for BucketRepository {
