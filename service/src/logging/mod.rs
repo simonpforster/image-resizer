@@ -24,6 +24,7 @@ pub async fn init_tracing() -> Result<(), ParseError> {
         .await
         .expect("Failed to create Stackdriver tracer.");
 
+    tokio::spawn(driver);
 
     let provider = TracerProvider::builder()
         .with_batch_exporter(stackdriver_tracer, Tokio)
