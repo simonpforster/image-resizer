@@ -49,7 +49,11 @@ pub async fn router(
             let mut ok = Response::new(full("OK"));
             *ok.status_mut() = StatusCode::OK;
             Ok(ok)
-        }
+        },
+        (&Method::GET, "/", None) => {
+            let no_content = Response::builder().status(StatusCode::NO_CONTENT).body(full(Bytes::new()))?;
+             Ok(no_content)
+        },
         (&Method::GET, path, query_params) => {
             let resp = transform(process_resize(path, query_params).await);
             resp
