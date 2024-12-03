@@ -40,7 +40,7 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let _ = init_tracing();
+    let _ = init_tracing().await;
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
