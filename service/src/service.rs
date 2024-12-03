@@ -3,7 +3,7 @@ pub(crate) use crate::domain::error::ErrorResponse;
 pub(crate) use crate::domain::error::ErrorResponse::*;
 use crate::domain::server_timing::{timing::Timing, ServerTiming};
 use crate::domain::{ExtensionProvider, ImageData};
-use crate::image_service::{read_image, resize_image};
+use crate::image_service::{get_image, resize_image};
 use futures_util::{stream, StreamExt};
 use http_body_util::combinators::BoxBody;
 use http_body_util::StreamBody;
@@ -28,7 +28,7 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
     };
 
     debug!("Dimensions parsed");
-    let (image, format) = read_image(path).await?;
+    let (image, format) = get_image(path).await?;
     let decoding_timing: Timing = Timing::new("dec", decoding_timer.elapsed(), None);
 
     let resizing_timer = Instant::now();

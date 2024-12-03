@@ -9,7 +9,7 @@ use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCroppi
 use image::{DynamicImage, ImageFormat, ImageReader};
 use std::io::{BufReader, Cursor};
 use std::time::Instant;
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info, instrument, Instrument};
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -22,7 +22,7 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 ///     1. Volume cache
 ///     2. Bucket (HTTP/2)
 #[instrument]
-pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
+pub async fn get_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
     let image_cache_item: Vec<u8> = match VOLUME_REPOSITORY.read_image(path).await.ok() {
         Some(item) => item,
         None => {
@@ -30,9 +30,9 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 
             let new_path: String = path.to_string();
             let cache_item = bucket_item.clone();
-            tokio::task::spawn(async move {
+            let _ = tokio::task::spawn(async move {
                 VOLUME_REPOSITORY.write_image(&new_path, &cache_item).await
-            });
+            }).in_current_span();
 
             bucket_item
         }

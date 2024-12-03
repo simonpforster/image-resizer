@@ -7,6 +7,7 @@ lazy_static! {
     static ref BUCKET_CLIENT: reqwest::Client = bucket_client();
 }
 
+
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let url = String::from(BUCKET_URL) + path;
     let resp = BUCKET_CLIENT.get(&url).send().await?;
