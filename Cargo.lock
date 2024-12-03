@@ -2140,6 +2140,7 @@ dependencies = [
  "hyper-util",
  "image",
  "lazy_static",
+ "log",
  "opentelemetry 0.27.1",
  "opentelemetry-stdout",
  "opentelemetry_sdk 0.27.1",

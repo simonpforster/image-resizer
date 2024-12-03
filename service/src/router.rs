@@ -5,8 +5,9 @@ use crate::service::process_resize;
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
 use hyper::body::Bytes;
 use hyper::{HeaderMap, Method, Request, Response, StatusCode};
+use opentelemetry::Context;
 use opentelemetry::propagation::{Extractor, Injector};
-use tracing::instrument;
+use tracing::{info, instrument};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 struct HyperHeaderExtractor<'a>(&'a HeaderMap);
@@ -39,9 +40,11 @@ pub async fn router(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>> {
 
-    let context = opentelemetry::global::get_text_map_propagator(|propagator| {
+    let context: Context = opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.extract(&HyperHeaderExtractor(&req.headers().clone()))
     });
+
+    info!("{:?}", context);
     tracing::Span::current().set_parent(context);
     match (req.method(), req.uri().path(), req.uri().query()) {
         (&Method::GET, "/private/status", None) => {
