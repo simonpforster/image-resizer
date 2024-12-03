@@ -43,8 +43,6 @@ pub async fn router(
     let context: Context = opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.extract(&HyperHeaderExtractor(&req.headers().clone()))
     });
-
-    info!("{:?}", context);
     tracing::Span::current().set_parent(context);
     match (req.method(), req.uri().path(), req.uri().query()) {
         (&Method::GET, "/private/status", None) => {
