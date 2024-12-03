@@ -1,4 +1,3 @@
-use crate::logging::logger_setup;
 use crate::repository::bucket_repository::BucketRepository;
 use crate::repository::cache_repository::CacheRepository;
 use crate::repository::volume_repository::VolumeRepository;
@@ -10,6 +9,9 @@ use lazy_static::lazy_static;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tracing::info;
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::filter::LevelFilter;
+use crate::logging::init_tracing;
 
 mod client;
 mod domain;
@@ -41,7 +43,7 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let _ = logger_setup();
+    let _ = init_tracing();
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 

@@ -9,7 +9,7 @@ use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCroppi
 use image::{DynamicImage, EncodableLayout, ImageFormat, ImageReader};
 use std::io::{BufReader, Cursor};
 use std::time::Instant;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, instrument};
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -19,8 +19,9 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
 
 ///
 /// Get image from provided path, it attempts:
-///     1. Memory Cache
+///     1. Volume cache
 ///     2. Bucket (HTTP/2)
+#[instrument]
 pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
     let image_cache_item: ImageItem = match VOLUME_REPOSITORY.read_image(path).await.ok() {
         Some(item) => item,
@@ -59,6 +60,7 @@ pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), Error
 }
 
 /// Resize an image based on a provided `Dimension`.
+#[instrument]
 pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
     let mut dst_image: DynamicImage;
     let mut resizer: Resizer = Resizer::new();
