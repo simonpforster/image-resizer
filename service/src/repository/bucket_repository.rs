@@ -13,9 +13,7 @@ impl ImageRepository for BucketRepository {
     async fn read_image(&self, path: &str) -> Result<Vec<u8>, ErrorResponse> {
         bucket_request(path).await.map_err(|_| {
             error!("Could not decode image at {path}");
-            ImageNotFoundError {
-                path: path.to_string(),
-            }
+            ImageNotFoundError {}
         })
     }
 }

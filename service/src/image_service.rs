@@ -24,7 +24,6 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     mul_div_alpha: true,
 };
 
-///
 /// Get image from provided path, it attempts:
 ///     1. Volume cache
 ///     2. Bucket (HTTP/2)
@@ -45,6 +44,7 @@ pub async fn get_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorR
 }
 
 /// Resize an image based on a provided `Dimension`.
+/// TODO make output Vec<u8>
 #[instrument(skip(src_image))]
 pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
     let mut dst_image: DynamicImage;
@@ -73,10 +73,7 @@ pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat, path: &str) -> Re
     ImageReader::with_format(&mut reader, format)
         .decode()
         .map_err(|_| {
-            error!("Could not decode image at {path}");
-            ImageDecodeError {
-                path: path.to_string(),
-            }
+            ImageDecodeError {}
         })
 }
 
@@ -86,13 +83,8 @@ pub fn encode_image(image: DynamicImage, format: ImageFormat, path: &str) -> Res
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
     image.write_to(&mut cursor, format).map_err(|_| {
-        error!("Could not write the image for {path}");
-        ImageWriteError {
-            path: path.to_string(),
-        }
+        ImageWriteError {}
     })?;
-    debug!("Image was written for {path}");
-
     let content_length: u64 = bytes.len() as u64;
     let chunked = stream::iter(bytes)
         .chunks(8192)

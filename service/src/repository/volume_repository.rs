@@ -22,17 +22,13 @@ impl VolumeRepository {
 
         let _ = tokio::fs::create_dir_all(parent).await.map_err(|_| {
             error!("Could not create dirs to image at {full_path}");
-            ImageWriteError {
-                path: path.to_string(),
-            }
+            ImageWriteError {}
         })?;
         tokio::fs::write(&full_path, cache_item)
             .await
             .map_err(|_| {
                 error!("Could not write image at {full_path}");
-                ImageWriteError {
-                    path: path.to_string(),
-                }
+                ImageWriteError {}
             })?;
         Ok(())
     }
@@ -46,9 +42,7 @@ impl ImageRepository for VolumeRepository {
         let bytes: Vec<u8> = tokio::fs::read(&full_path)
             .map_err(|_| {
                 info!("FS could not read image at {full_path}");
-                ImageNotFoundInCacheError {
-                    path: path.to_string(),
-                }
+                ImageNotFoundInCacheError {}
             })
             .await?;
         Ok(bytes)
