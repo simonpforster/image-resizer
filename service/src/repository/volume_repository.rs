@@ -17,7 +17,6 @@ impl VolumeRepository {
         path: &str,
         cache_item: &[u8],
     ) -> Result<(), ErrorResponse> {
-        let timer = Instant::now();
         let full_path = ROOT_PATH.to_string() + path;
         let parent = Path::new(&full_path).parent().unwrap();
 
@@ -35,11 +34,6 @@ impl VolumeRepository {
                     path: path.to_string(),
                 }
             })?;
-        info!(
-            "FS write took {} ms for {}",
-            timer.elapsed().as_millis(),
-            path
-        );
         Ok(())
     }
 }

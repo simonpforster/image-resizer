@@ -3,7 +3,7 @@ pub(crate) use crate::domain::error::ErrorResponse;
 pub(crate) use crate::domain::error::ErrorResponse::*;
 use crate::domain::server_timing::{timing::Timing, ServerTiming};
 use crate::domain::{ExtensionProvider, ImageData};
-use crate::image_service::{get_image, image_to_body, resize_image};
+use crate::image_service::{get_image, encode_image, resize_image};
 use futures_util::{stream, StreamExt};
 use http_body_util::combinators::BoxBody;
 use http_body_util::StreamBody;
@@ -44,7 +44,7 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
     debug!("Image resized, writing image to buffer");
 
     let encoding_timer = Instant::now();
-    let (body, content_length) = image_to_body(new_image, format, path)?;
+    let (body, content_length) = encode_image(new_image, format, path)?;
     let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
 
 
