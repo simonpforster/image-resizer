@@ -79,15 +79,13 @@ pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat) -> Result<Dynamic
 
 /// Take a dynamic image and write it as `Bytes`.
 #[instrument(skip(image))]
-pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<(Vec<u8>, u64), ErrorResponse> {
+pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<Vec<u8>, ErrorResponse> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
     image.write_to(&mut cursor, format).map_err(|_| {
         ImageWriteError {}
     })?;
-    let content_length: u64 = bytes.len() as u64;
-
-    Ok((bytes, content_length))
+    Ok(bytes)
 }
 
 #[instrument(skip(image_bytes))]
