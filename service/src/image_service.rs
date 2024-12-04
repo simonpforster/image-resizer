@@ -79,16 +79,21 @@ pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat) -> Result<Dynamic
 
 /// Take a dynamic image and write it as `Bytes`.
 #[instrument(skip(image))]
-pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<(BoxBody<Bytes, hyper::Error>, u64), ErrorResponse> {
+pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<(Vec<u8>, u64), ErrorResponse> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
     image.write_to(&mut cursor, format).map_err(|_| {
         ImageWriteError {}
     })?;
     let content_length: u64 = bytes.len() as u64;
-    let chunked = stream::iter(bytes)
+
+    Ok((bytes, content_length))
+}
+
+#[instrument(skip(image_bytes))]
+pub fn image_to_body(image_bytes: Vec<u8>, format: ImageFormat) -> BoxBody<Bytes, hyper::Error> {
+    let chunked = stream::iter(image_bytes)
         .chunks(8192)
         .map(|x| Ok::<Frame<Bytes>, hyper::Error>(Frame::data(Bytes::from(x))));
-    let body: BoxBody<Bytes, hyper::Error> = BoxBody::new(StreamBody::new(chunked));
-    Ok((body, content_length))
+    BoxBody::new(StreamBody::new(chunked))
 }
