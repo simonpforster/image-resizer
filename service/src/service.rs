@@ -44,7 +44,7 @@ pub async fn process_resize(path: &str, opt_query: Option<&str>) -> InternalResp
     debug!("Image resized, writing image to buffer");
 
     let encoding_timer = Instant::now();
-    let (body, content_length) = encode_image(new_image, format, path)?;
+    let (body, content_length) = encode_image(new_image, format)?;
     let encoding_timing: Timing = Timing::new("enc", encoding_timer.elapsed(), None);
 
 

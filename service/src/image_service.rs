@@ -38,7 +38,7 @@ pub async fn get_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorR
         }
     };
 
-    let image = decode_image(image_bytes, format_from_path(path), path)?;
+    let image = decode_image(image_bytes, format_from_path(path))?;
     debug!("Image decoded at {path}");
     Ok((image, format_from_path(&path)))
 }
@@ -67,7 +67,7 @@ pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicIma
 
 /// Decode bytes to `DynamicImage`.
 #[instrument(skip(image_bytes))]
-pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat, path: &str) -> Result<DynamicImage, ErrorResponse> {
+pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat) -> Result<DynamicImage, ErrorResponse> {
     let cursor = Cursor::new(image_bytes);
     let mut reader = BufReader::new(cursor);
     ImageReader::with_format(&mut reader, format)
@@ -79,7 +79,7 @@ pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat, path: &str) -> Re
 
 /// Take a dynamic image and write it as `Bytes`.
 #[instrument(skip(image))]
-pub fn encode_image(image: DynamicImage, format: ImageFormat, path: &str) -> Result<(BoxBody<Bytes, hyper::Error>, u64), ErrorResponse> {
+pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<(BoxBody<Bytes, hyper::Error>, u64), ErrorResponse> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
     image.write_to(&mut cursor, format).map_err(|_| {
