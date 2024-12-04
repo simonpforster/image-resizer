@@ -89,7 +89,7 @@ pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<Vec<u8>,
 }
 
 #[instrument(skip(image_bytes))]
-pub fn image_to_body(image_bytes: Vec<u8>, format: ImageFormat) -> BoxBody<Bytes, hyper::Error> {
+pub fn image_to_body(image_bytes: Vec<u8>) -> BoxBody<Bytes, hyper::Error> {
     let chunked = stream::iter(image_bytes)
         .chunks(8192)
         .map(|x| Ok::<Frame<Bytes>, hyper::Error>(Frame::data(Bytes::from(x))));
