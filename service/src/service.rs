@@ -4,16 +4,11 @@ pub(crate) use crate::domain::error::ErrorResponse::*;
 use crate::domain::server_timing::{timing::Timing, ServerTiming};
 use crate::domain::{ExtensionProvider, ImageData};
 use crate::image_service::{get_image, encode_image, resize_image, image_to_body};
-use futures_util::{stream, StreamExt};
-use http_body_util::combinators::BoxBody;
-use http_body_util::StreamBody;
-use hyper::body::{Bytes, Frame};
 use image::DynamicImage;
-use std::io::Cursor;
 use std::time::Instant;
 use tracing::instrument;
 
-use tracing::{debug, error};
+use tracing::debug;
 
 pub type InternalResponse = Result<ImageData, ErrorResponse>;
 

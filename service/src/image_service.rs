@@ -2,20 +2,17 @@ use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageDecodeError;
-use crate::domain::{format_from_path, ExtensionProvider};
+use crate::domain::format_from_path;
 use crate::repository::ImageRepository;
 use crate::{BUCKET_REPOSITORY, VOLUME_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
 use image::{DynamicImage, ImageFormat, ImageReader};
 use std::io::{BufReader, Cursor};
-use std::time::Instant;
-use tokio_util::bytes;
-use tracing::{debug, error, info, instrument, Instrument};
+use tracing::{debug, instrument, };
 use futures_util::{stream, StreamExt};
 use hyper::body::{Bytes, Frame};
 use http_body_util::combinators::{BoxBody};
 use http_body_util::StreamBody;
-use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::service::ImageWriteError;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {

@@ -6,10 +6,8 @@ use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
 use std::net::SocketAddr;
-use opentelemetry_sdk::propagation::TraceContextPropagator;
-use rustls::crypto::CryptoProvider;
 use tokio::net::TcpListener;
-use tracing::info;
+use tracing::{debug, info};
 use crate::logging::init_tracing;
 
 mod client;
@@ -62,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .serve_connection(io, service_fn(router))
                 .await
             {
-                eprintln!("Error serving connection: {:?}", err);
+                debug!("Error serving connection: {:?}", err);
             }
         });
     }

@@ -2,7 +2,6 @@ use crate::repository::ImageRepository;
 use crate::service::{ErrorResponse, ImageNotFoundInCacheError, ImageWriteError};
 use futures_util::TryFutureExt;
 use std::path::Path;
-use std::time::Instant;
 use tracing::{error, info, instrument};
 
 #[derive(Debug)]
