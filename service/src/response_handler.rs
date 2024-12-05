@@ -2,16 +2,14 @@ use crate::domain::ImageData;
 use crate::service::InternalResponse;
 use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
-use hyper::{Response, StatusCode};
-use std::error;
-use std::fmt::Display;
 use hyper::http::HeaderValue;
+use hyper::Response;
+use std::error;
+use opentelemetry::Context;
 use opentelemetry::global::ObjectSafeSpan;
-use opentelemetry::trace::FutureExt;
-use reqwest::header::HeaderMap;
+use opentelemetry::trace::{SpanContext, TraceContextExt};
 use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use crate::observability::propagators::HyperHeaderInjector;
 
 const IMAGE_HEADER_NAME: &str = "content-type";
 const CACHE_CONTROL_HEADER_NAME: &str = "cache-control";
@@ -41,13 +39,15 @@ pub fn transform(response: InternalResponse) -> ResultResponse {
                 header_map.insert(SERVER_TIMING_HEADER_NAME, HeaderValue::from_str(&format!("{}", server_timing))?);
                 header_map.insert(CACHE_CONTROL_HEADER_NAME, HeaderValue::from_str(&CACHE_CONTROL_HEADER_VALUE)?);
                 header_map.insert(CONTENT_LENGTH_HEADER_NAME, HeaderValue::from_str(&content_length.to_string())?);
-                if let Some(span_context) = tracing::Span::current().context().span_context() {
+                let span = tracing::Span::current()
+                    .context().clone();
+                if let Some(span_context) = span.get::<SpanContext>() {
                     let trace_id = span_context.trace_id().to_string();
                     let span_id = span_context.span_id().to_string();
-                    let trace_flags = span_context.trace_flags().to_string();
+                    let trace_flags = span_context.trace_flags();
 
                     let traceresponse_value = format!(
-                        "00-{}-{}-{}",
+                        "00-{}-{}-{:2x?}",
                         trace_id,
                         span_id,
                         trace_flags
@@ -55,7 +55,7 @@ pub fn transform(response: InternalResponse) -> ResultResponse {
 
                     header_map.insert(
                         TRACERESPONSE_HEADER,
-                        HeaderValue::from_str(&traceresponse_value)?
+                        HeaderValue::from_str(&traceresponse_value)?,
                     );
                 }
             }
