@@ -4,10 +4,8 @@ use http_body_util::combinators::BoxBody;
 use hyper::body::Bytes;
 use hyper::http::HeaderValue;
 use hyper::Response;
+use opentelemetry::trace::SpanContext;
 use std::error;
-use opentelemetry::Context;
-use opentelemetry::global::ObjectSafeSpan;
-use opentelemetry::trace::{SpanContext, TraceContextExt};
 use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
