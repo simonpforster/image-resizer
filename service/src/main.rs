@@ -37,7 +37,7 @@ where
     }
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "multi-thread", worker_threads = 17)]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let _ = rustls::crypto::ring::default_provider().install_default().unwrap();
