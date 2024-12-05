@@ -22,11 +22,6 @@ Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Syn
 
 #[instrument(skip(response))]
 pub fn transform(response: InternalResponse) -> ResultResponse {
-    let mut header_map = HeaderMap::new();
-
-    let _ = opentelemetry::global::get_text_map_propagator(|propagator| {
-        propagator.inject(&mut HyperHeaderInjector(&mut header_map))
-    });
     match response {
         Ok(ImageData {
                body,
@@ -34,13 +29,18 @@ pub fn transform(response: InternalResponse) -> ResultResponse {
                format_extension,
                content_length,
            }) => {
-            header_map.insert(IMAGE_HEADER_NAME, HeaderValue::from_str(&(IMAGE_HEADER_ROOT.to_owned() + &*format_extension))?);
-            header_map.insert(SERVER_TIMING_HEADER_NAME, HeaderValue::from_str(&format!("{}", server_timing))?);
-            header_map.insert(CACHE_CONTROL_HEADER_NAME, HeaderValue::from_str(&CACHE_CONTROL_HEADER_VALUE)?);
-            header_map.insert("content-length", HeaderValue::from_str(&content_length.to_string())?);
             let mut response = Response::new(body);
-            let mut response_headers = response.headers_mut();
-            response_headers = &mut header_map;
+            let header_map = response.headers_mut();
+            {
+                header_map.insert(IMAGE_HEADER_NAME, HeaderValue::from_str(&(IMAGE_HEADER_ROOT.to_owned() + &*format_extension))?);
+                header_map.insert(SERVER_TIMING_HEADER_NAME, HeaderValue::from_str(&format!("{}", server_timing))?);
+                header_map.insert(CACHE_CONTROL_HEADER_NAME, HeaderValue::from_str(&CACHE_CONTROL_HEADER_VALUE)?);
+                header_map.insert("content-length", HeaderValue::from_str(&content_length.to_string())?);
+                let _ = opentelemetry::global::get_text_map_propagator(|propagator| {
+                    propagator.inject(&mut HyperHeaderInjector(header_map))
+                });
+            }
+
             Ok(response)
         }
         Err(e) => Ok(e.handle()?),
