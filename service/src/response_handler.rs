@@ -39,9 +39,8 @@ pub fn transform(response: InternalResponse) -> ResultResponse {
                 header_map.insert(SERVER_TIMING_HEADER_NAME, HeaderValue::from_str(&format!("{}", server_timing))?);
                 header_map.insert(CACHE_CONTROL_HEADER_NAME, HeaderValue::from_str(&CACHE_CONTROL_HEADER_VALUE)?);
                 header_map.insert(CONTENT_LENGTH_HEADER_NAME, HeaderValue::from_str(&content_length.to_string())?);
-                let span = tracing::Span::current()
-                    .context().clone();
-                if let Some(span_context) = span.get::<SpanContext>() {
+                let context = tracing::Span::current().context().clone();
+                if let Some(span_context) = context.get::<SpanContext>() {
                     let trace_id = span_context.trace_id().to_string();
                     let span_id = span_context.span_id().to_string();
                     let trace_flags = span_context.trace_flags();
