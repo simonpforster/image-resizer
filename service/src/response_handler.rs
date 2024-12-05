@@ -41,11 +41,7 @@ pub fn transform(response: InternalResponse) -> ResultResponse {
                 header_map.insert(SERVER_TIMING_HEADER_NAME, HeaderValue::from_str(&format!("{}", server_timing))?);
                 header_map.insert(CACHE_CONTROL_HEADER_NAME, HeaderValue::from_str(&CACHE_CONTROL_HEADER_VALUE)?);
                 header_map.insert(CONTENT_LENGTH_HEADER_NAME, HeaderValue::from_str(&content_length.to_string())?);
-                let _ = opentelemetry::global::get_text_map_propagator(|propagator| {
-                    propagator.inject(&mut HyperHeaderInjector(header_map))
-                });
-                let current_span = tracing::Span::current();
-                if let Some(span_context) = current_span.context().span_context() {
+                if let Some(span_context) = tracing::Span::current().context().span_context() {
                     let trace_id = span_context.trace_id().to_string();
                     let span_id = span_context.span_id().to_string();
                     let trace_flags = span_context.trace_flags().to_string();
