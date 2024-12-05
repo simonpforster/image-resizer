@@ -8,12 +8,12 @@ use lazy_static::lazy_static;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
-use crate::logging::init_tracing;
+use crate::tracing::init_tracing;
 
 mod client;
 mod domain;
 mod image_service;
-mod logging;
+mod tracing;
 mod repository;
 mod response_handler;
 mod router;
