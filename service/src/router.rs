@@ -4,36 +4,11 @@ use crate::response_handler::transform;
 use crate::service::process_resize;
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
 use hyper::body::Bytes;
-use hyper::{HeaderMap, Method, Request, Response, StatusCode};
+use hyper::{Method, Request, Response, StatusCode};
 use opentelemetry::Context;
-use opentelemetry::propagation::{Extractor, Injector};
 use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-
-struct HyperHeaderExtractor<'a>(&'a HeaderMap);
-
-impl<'a> Extractor for HyperHeaderExtractor<'a> {
-    fn get(&self, key: &str) -> Option<&str> {
-        self.0.get(key)
-            .and_then(|value| value.to_str().ok())
-    }
-
-    fn keys(&self) -> Vec<&str> {
-        self.0.keys()
-            .map(|k| k.as_str())
-            .collect()
-    }
-}
-
-// struct HyperHeaderInjector<'a>(&'a mut HeaderMap);
-//
-// impl<'a> Injector for HyperHeaderInjector<'a> {
-//     fn set(&mut self, key: &str, value: String) {
-//         if let Ok(header_name) = key.parse() {
-//             self.0.insert(header_name, value.parse().unwrap());
-//         }
-//     }
-// }
+use crate::observability::propagators::HyperHeaderExtractor;
 
 #[instrument]
 pub async fn router(

@@ -1,3 +1,5 @@
+pub mod propagators;
+
 use opentelemetry::{Context, KeyValue};
 use opentelemetry::trace::{Span as _, TraceResult, TracerProvider as _};
 use opentelemetry_sdk::export::trace::SpanData;
