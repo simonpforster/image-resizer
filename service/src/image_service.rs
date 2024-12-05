@@ -2,11 +2,18 @@ use crate::domain::dimension::Dimension;
 use crate::domain::dimension::Dimension::{Height, Width};
 use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageDecodeError;
-use crate::repository::{ImageItem, ImageRepository};
-use crate::{BUCKET_REPOSITORY, CACHE_REPOSITORY};
+use crate::domain::format_from_path;
+use crate::repository::ImageRepository;
+use crate::{BUCKET_REPOSITORY, VOLUME_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
-use image::{DynamicImage, EncodableLayout, ImageFormat};
-use log::{debug, error};
+use image::{DynamicImage, ImageFormat, ImageReader};
+use std::io::{BufReader, Cursor};
+use tracing::{debug, instrument, };
+use futures_util::{stream, StreamExt};
+use hyper::body::{Bytes, Frame};
+use http_body_util::combinators::{BoxBody};
+use http_body_util::StreamBody;
+use crate::service::ImageWriteError;
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -14,43 +21,28 @@ const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     mul_div_alpha: true,
 };
 
-///
 /// Get image from provided path, it attempts:
-///     1. Memory Cache
+///     1. Volume cache
 ///     2. Bucket (HTTP/2)
-pub async fn read_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
-    let maybe_image_cached_item = CACHE_REPOSITORY.read_image(path).await.ok();
-
-    let image_cache_item: ImageItem = match maybe_image_cached_item {
+#[instrument]
+pub async fn get_image(path: &str) -> Result<(DynamicImage, ImageFormat), ErrorResponse> {
+    let image_bytes: Vec<u8> = match VOLUME_REPOSITORY.read_image(path).await.ok() {
         Some(item) => item,
         None => {
-            let new_image_cache_item = BUCKET_REPOSITORY.read_image(path).await?;
-
-            let new_path: String = path.to_string();
-            let cache_image = new_image_cache_item.clone();
-            tokio::task::spawn(
-                async move { CACHE_REPOSITORY.write_image(new_path, cache_image).await },
-            );
-
-            new_image_cache_item
+            let bucket_item = BUCKET_REPOSITORY.read_image(path).await?;
+            VOLUME_REPOSITORY.write_image(&path, &bucket_item).await?;
+            bucket_item
         }
     };
 
-    let image: DynamicImage = image::load_from_memory_with_format(
-        image_cache_item.image.as_bytes(),
-        image_cache_item.format,
-    )
-    .map_err(|_| {
-        error!("Could not decode image at {path}");
-        ImageDecodeError {
-            path: path.to_string(),
-        }
-    })?;
+    let image = decode_image(image_bytes, format_from_path(path))?;
     debug!("Image decoded at {path}");
-    Ok((image, image_cache_item.format))
+    Ok((image, format_from_path(&path)))
 }
 
 /// Resize an image based on a provided `Dimension`.
+/// TODO make output Vec<u8>
+#[instrument(skip(src_image))]
 pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicImage {
     let mut dst_image: DynamicImage;
     let mut resizer: Resizer = Resizer::new();
@@ -68,4 +60,35 @@ pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicIma
     };
     let _ = resizer.resize(&src_image, &mut dst_image, &RESIZE_OPTS);
     dst_image
+}
+
+/// Decode bytes to `DynamicImage`.
+#[instrument(skip(image_bytes))]
+pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat) -> Result<DynamicImage, ErrorResponse> {
+    let cursor = Cursor::new(image_bytes);
+    let mut reader = BufReader::new(cursor);
+    ImageReader::with_format(&mut reader, format)
+        .decode()
+        .map_err(|_| {
+            ImageDecodeError {}
+        })
+}
+
+/// Take a dynamic image and write it as `Bytes`.
+#[instrument(skip(image))]
+pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<Vec<u8>, ErrorResponse> {
+    let mut bytes: Vec<u8> = Vec::new();
+    let mut cursor = Cursor::new(&mut bytes);
+    image.write_to(&mut cursor, format).map_err(|_| {
+        ImageWriteError {}
+    })?;
+    Ok(bytes)
+}
+
+#[instrument(skip(image_bytes))]
+pub fn image_to_body(image_bytes: Vec<u8>) -> BoxBody<Bytes, hyper::Error> {
+    let chunked = stream::iter(image_bytes)
+        .chunks(8192)
+        .map(|x| Ok::<Frame<Bytes>, hyper::Error>(Frame::data(Bytes::from(x))));
+    BoxBody::new(StreamBody::new(chunked))
 }

@@ -1,25 +1,33 @@
 use std::error;
 
-use http_body_util::{BodyExt, combinators::BoxBody, Full};
-use hyper::{Method, Request, Response, StatusCode};
-use hyper::body::Bytes;
-use log::debug;
 use crate::response_handler::transform;
 use crate::service::process_resize;
+use http_body_util::{combinators::BoxBody, BodyExt, Full};
+use hyper::body::Bytes;
+use hyper::{Method, Request, Response, StatusCode};
+use opentelemetry::Context;
+use tracing::instrument;
+use tracing_opentelemetry::OpenTelemetrySpanExt;
+use crate::observability::propagators::HyperHeaderExtractor;
 
+#[instrument]
 pub async fn router(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>> {
-    let request_id = req.headers().get("X-Cloud-Trace-Context").map(|d| { d.to_str().unwrap_or("none") }).unwrap_or("none");
-    debug!("request_id: {}", request_id);
+    let context: Context = opentelemetry::global::get_text_map_propagator(|propagator| {
+        propagator.extract(&HyperHeaderExtractor(&req.headers().clone()))
+    });
+    tracing::Span::current().set_parent(context);
     match (req.method(), req.uri().path(), req.uri().query()) {
-        (&Method::GET, "/private/status", None) => {
-            let mut ok = Response::new(full("OK"));
-            *ok.status_mut() = StatusCode::OK;
-            Ok(ok)
+        (&Method::GET, "/private/status", None) =>
+            Ok(Response::new(full("OK"))),
+        (&Method::GET, "/", None) => {
+            let no_content = Response::builder().status(StatusCode::NO_CONTENT).body(full(Bytes::new()))?;
+            Ok(no_content)
         }
         (&Method::GET, path, query_params) => {
-            transform(process_resize(path, query_params).await)
+            let resp = transform(process_resize(path, query_params).await);
+            resp
         }
         _ => {
             let mut not_found = Response::new(full("Endpoint not found"));

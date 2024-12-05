@@ -31,23 +31,16 @@ pub fn decode(query: &str) -> Result<Dimension, ErrorResponse> {
 
     match opt_width {
         Some(w) => {
-            let a = str::parse::<u32>(w).map_err(|_| ImageWriteError {
-                path: query.to_string(),
-            })?;
+            let a = str::parse::<u32>(w).map_err(|_| ImageWriteError {})?;
             Ok(Width(a))
         }
         None => match opt_height {
             Some(h) => {
-                let a = str::parse::<u32>(h).map_err(|_| ImageWriteError {
-                    path: query.to_string(),
-                })?;
+                let a = str::parse::<u32>(h).map_err(|_| ImageWriteError {})?;
                 Ok(Height(a))
             }
             None => {
-                // need param error
-                Err(ImageWriteError {
-                    path: query.to_string(),
-                })
+                Err(ImageWriteError {})
             }
         },
     }

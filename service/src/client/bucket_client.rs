@@ -1,11 +1,12 @@
 use lazy_static::lazy_static;
-use log::info;
+use tracing::info;
 
 const BUCKET_URL: &str = "https://storage.googleapis.com/image-resizer_europe-west1";
 
 lazy_static! {
     static ref BUCKET_CLIENT: reqwest::Client = bucket_client();
 }
+
 
 pub async fn bucket_request(path: &str) -> Result<Vec<u8>, reqwest::Error> {
     let url = String::from(BUCKET_URL) + path;

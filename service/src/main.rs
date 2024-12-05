@@ -1,26 +1,26 @@
-use std::net::SocketAddr;
+use crate::repository::bucket_repository::BucketRepository;
+use crate::repository::volume_repository::VolumeRepository;
+use crate::router::router;
 use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
-use log::info;
+use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use crate::logging::logger_setup;
-use crate::repository::bucket_repository::BucketRepository;
-use crate::repository::cache_repository::CacheRepository;
-use crate::router::router;
+use tracing::{debug, info};
+use crate::observability::init_tracing;
 
-mod service;
-mod router;
-mod logging;
-mod response_handler;
-mod image_service;
 mod client;
-mod repository;
 mod domain;
+mod image_service;
+mod observability;
+mod repository;
+mod response_handler;
+mod router;
+mod service;
 
 lazy_static! {
-    static ref CACHE_REPOSITORY: CacheRepository = CacheRepository {};
+    static ref VOLUME_REPOSITORY: VolumeRepository = VolumeRepository {};
     static ref BUCKET_REPOSITORY: BucketRepository = BucketRepository {};
 }
 
@@ -39,10 +39,10 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let _ = logger_setup();
 
-    // Cache culler task
-    tokio::task::spawn(CACHE_REPOSITORY.cull_images_loop());
+    let _ = rustls::crypto::ring::default_provider().install_default().unwrap();
+
+    let _ = init_tracing().await;
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
@@ -60,9 +60,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .serve_connection(io, service_fn(router))
                 .await
             {
-                eprintln!("Error serving connection: {:?}", err);
+                debug!("Error serving connection: {:?}", err);
             }
         });
     }
 }
-

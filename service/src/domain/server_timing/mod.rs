@@ -1,20 +1,21 @@
-use std::fmt::{Display, Formatter};
 use crate::domain::server_timing::timing::Timing;
+use std::fmt::{Display, Formatter};
 
 pub mod timing;
 
+#[derive(Debug)]
 pub struct ServerTiming {
     timings: Vec<Timing>,
 }
 
 impl Display for ServerTiming {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let display =
-            self.timings.iter()
-                .map(|tim| { tim.to_string() })
-                .reduce(|acc, val| {
-                    format!("{acc}, {val}")
-                }).unwrap();
+        let display = self
+            .timings
+            .iter()
+            .map(|tim| tim.to_string())
+            .reduce(|acc, val| format!("{acc}, {val}"))
+            .unwrap();
 
         write!(f, "{display}")
     }
@@ -28,8 +29,8 @@ impl ServerTiming {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn server_timing_display() {
