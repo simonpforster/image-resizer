@@ -41,12 +41,12 @@ pub fn transform(response: InternalResponse) -> ResultResponse {
                 header_map.insert(CONTENT_LENGTH_HEADER_NAME, HeaderValue::from_str(&content_length.to_string())?);
                 let context = tracing::Span::current().context().clone();
                 if let Some(span_context) = context.get::<SpanContext>() {
-                    let trace_id = span_context.trace_id().to_string();
-                    let span_id = span_context.span_id().to_string();
+                    let trace_id = span_context.trace_id();
+                    let span_id = span_context.span_id();
                     let trace_flags = span_context.trace_flags();
 
                     let traceresponse_value = format!(
-                        "00-{}-{}-{:2x?}",
+                        "00-{}-{}-{:?}",
                         trace_id,
                         span_id,
                         trace_flags
