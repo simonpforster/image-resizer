@@ -1,6 +1,9 @@
 # Image Resizer
-Stateless image resizing service.
 
+![](https://skillicons.dev/icons?i=rust,docker,gcp&theme=dark)
+
+
+Stateless image resizing service.
 
 ## Building docker image
 ```
