@@ -1,14 +1,14 @@
+use crate::observability::init_tracing;
 use crate::repository::bucket_repository::BucketRepository;
 use crate::repository::volume_repository::VolumeRepository;
 use crate::router::router;
-use hyper::server::conn::http2;
+use hyper::server::conn::{http1, http2};
 use hyper::service::service_fn;
 use hyper_util::rt::TokioIo;
 use lazy_static::lazy_static;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
-use crate::observability::init_tracing;
 
 mod client;
 mod domain;
@@ -39,10 +39,11 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let _ = rustls::crypto::ring::default_provider()
+        .install_default()
+        .unwrap();
 
-    let _ = rustls::crypto::ring::default_provider().install_default().unwrap();
-
-    let _ = init_tracing().await;
+    // let _ = init_tracing().await;
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
@@ -56,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let io = TokioIo::new(stream);
 
         tokio::task::spawn(async move {
-            if let Err(err) = http2::Builder::new(TokioExecutor)
+            if let Err(err) = http1::Builder::new() // http2::Builder::new(TokioExecutor)
                 .serve_connection(io, service_fn(router))
                 .await
             {

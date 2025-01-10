@@ -1,7 +1,6 @@
 name: "image-resizer"
 
 services:
-
   service:
     build:
       context: .
@@ -10,7 +9,6 @@ services:
       - "8080:8080"
     volumes:
       - /Users/sfe34/oliviazuo-portfolio:/mnt/gcsfuse
-
 
 volumes:
   bucket:
