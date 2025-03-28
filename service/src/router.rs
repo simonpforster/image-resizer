@@ -10,7 +10,7 @@ use tracing::instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use crate::observability::propagators::HyperHeaderExtractor;
 
-#[instrument]
+#[instrument(skip(req))]
 pub async fn router(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, Box<dyn error::Error + Send + Sync>> {
