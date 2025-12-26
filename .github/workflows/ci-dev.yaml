@@ -1,4 +1,4 @@
-name: Service CI
+name: Development CI
 
 on:
   pull_request:
@@ -60,7 +60,7 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          file: ./service/Dockerfile
+          file: Dockerfile
           push: true
           tags: ${{ env.IMAGE_TAG_LATEST }},${{ env.IMAGE_TAG_VERSION }}
           provenance: false
