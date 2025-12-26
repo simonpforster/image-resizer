@@ -4,16 +4,16 @@ use crate::domain::error::ErrorResponse;
 use crate::domain::error::ErrorResponse::ImageDecodeError;
 use crate::domain::format_from_path;
 use crate::repository::ImageRepository;
+use crate::service::ImageWriteError;
 use crate::{BUCKET_REPOSITORY, VOLUME_REPOSITORY};
 use fast_image_resize::{FilterType, ResizeAlg, ResizeOptions, Resizer, SrcCropping};
+use futures_util::{stream, StreamExt};
+use http_body_util::combinators::BoxBody;
+use http_body_util::StreamBody;
+use hyper::body::{Bytes, Frame};
 use image::{DynamicImage, ImageFormat, ImageReader};
 use std::io::{BufReader, Cursor};
-use tracing::{debug, instrument, };
-use futures_util::{stream, StreamExt};
-use hyper::body::{Bytes, Frame};
-use http_body_util::combinators::{BoxBody};
-use http_body_util::StreamBody;
-use crate::service::ImageWriteError;
+use tracing::{debug, instrument};
 
 const RESIZE_OPTS: ResizeOptions = ResizeOptions {
     algorithm: ResizeAlg::Convolution(FilterType::Lanczos3),
@@ -64,14 +64,15 @@ pub fn resize_image(dimension: Dimension, src_image: DynamicImage) -> DynamicIma
 
 /// Decode bytes to `DynamicImage`.
 #[instrument(skip(image_bytes))]
-pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat) -> Result<DynamicImage, ErrorResponse> {
+pub fn decode_image(
+    image_bytes: Vec<u8>,
+    format: ImageFormat,
+) -> Result<DynamicImage, ErrorResponse> {
     let cursor = Cursor::new(image_bytes);
     let mut reader = BufReader::new(cursor);
     ImageReader::with_format(&mut reader, format)
         .decode()
-        .map_err(|_| {
-            ImageDecodeError {}
-        })
+        .map_err(|_| ImageDecodeError {})
 }
 
 /// Take a dynamic image and write it as `Bytes`.
@@ -79,9 +80,9 @@ pub fn decode_image(image_bytes: Vec<u8>, format: ImageFormat) -> Result<Dynamic
 pub fn encode_image(image: DynamicImage, format: ImageFormat) -> Result<Vec<u8>, ErrorResponse> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut bytes);
-    image.write_to(&mut cursor, format).map_err(|_| {
-        ImageWriteError {}
-    })?;
+    image
+        .write_to(&mut cursor, format)
+        .map_err(|_| ImageWriteError {})?;
     Ok(bytes)
 }
 

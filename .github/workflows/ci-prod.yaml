@@ -1,9 +1,9 @@
-name: Push Registry
+name: Prod CI
 
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 env:
   REGION: europe-west1
@@ -20,8 +20,8 @@ jobs:
 
       - name: Set vars
         run: |
-         echo "IMAGE_TAG_LATEST=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:latest" >> $GITHUB_ENV
-         echo "IMAGE_TAG_VERSION=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          echo "IMAGE_TAG_LATEST=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:latest" >> $GITHUB_ENV
+          echo "IMAGE_TAG_VERSION=$REGION-docker.pkg.dev/$PROJECT/$REPO/$IMAGE:$GITHUB_REF_NAME" >> $GITHUB_ENV
 
       - name: Google Cloud Auth
         uses: google-github-actions/auth@v2
